@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#002B7F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clash RO">
+<title>Clash of România</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700;800&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ECRAN DE START -->
+<div id="ecran-start">
+  <div class="start-card">
+    <div class="motiv"></div>
+    <div class="steag"><span></span><span></span><span></span></div>
+    <h1>Clash of<span>România</span></h1>
+    <p class="sub">Ridică-ți satul, apără-l de haiduci și cucerește cetățile țării.</p>
+    <div id="demo-info" class="info" hidden>Mod demo — nu e conectat la server. Progresul rămâne doar pe acest telefon.</div>
+    <div id="form-auth"></div>
+    <div id="eroare-auth" class="eroare"></div>
+    <div class="motiv jos"></div>
+  </div>
+</div>
+
+<!-- JOCUL -->
+<div id="joc" hidden>
+  <header id="bara">
+    <div class="res" id="r-lei"><i class="ico lei"></i><div><b>0</b><span class="umplere"><span></span></span><small></small></div></div>
+    <div class="res" id="r-grau"><i class="ico grau"></i><div><b>0</b><span class="umplere"><span></span></span><small></small></div></div>
+    <div class="res mic" id="r-galbeni"><i class="ico galbeni"></i><b>0</b></div>
+    <div class="res mic" id="r-trofee"><i class="ico trofeu"></i><b>0</b></div>
+  </header>
+  <div class="motiv"></div>
+  <div id="info-sat"><span id="nume-sat"></span><span id="scut" hidden>🛡 Scut <b></b></span><span id="offline" hidden>Fără net — reîncerc</span><span id="mesteri"></span></div>
+  <div id="scena"><canvas id="sat"></canvas></div>
+  <nav id="meniu">
+    <button data-nav="construieste"><svg viewBox="0 0 24 24"><path d="M14.5 3.5l6 6-2.5 2.5-2-2-8.5 8.5-3-3L13 7l-1-1z" fill="currentColor"/></svg>Construiește</button>
+    <button data-nav="armata"><svg viewBox="0 0 24 24"><path d="M4 3l7 7-1.5 1.5L3 5V3zm16 0v2l-6.5 6.5L12 10l7-7zM6 14l4 4-2 2-1.5-1.5L4 21l-1-1 2.5-2.5L4 16zm12 0l2 2-1.5 1.5L21 20l-1 1-2.5-2.5L16 20l-2-2z" fill="currentColor"/></svg>Armată</button>
+    <button data-nav="harta" class="mare"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14m6-12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Atacă</button>
+    <button data-nav="targ"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>Târg</button>
+    <button data-nav="profil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4.5 3.6-7 8-7s8 2.5 8 7z" fill="currentColor"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- PANOU DE JOS -->
+<div id="foaie" hidden>
+  <div class="foaie-cap"><h2></h2><button class="inchide" aria-label="Închide">✕</button></div>
+  <div class="foaie-corp"></div>
+</div>
+
+<!-- LUPTA -->
+<div id="lupta" hidden>
+  <div id="l-sus">
+    <div class="l-adv"><b id="l-nume"></b><small id="l-sub"></small></div>
+    <div class="l-dr"><div id="l-timp">Cercetare</div><div id="l-stele"></div></div>
+  </div>
+  <div id="l-info"><span>Distrus <b id="l-procent">0%</b></span><span id="l-loot"></span></div>
+  <div id="l-scena"><canvas id="lc"></canvas>
+    <div id="l-rezultat" hidden>
+      <div class="rez-card"><h2 class="rez-titlu"></h2><div class="rez-stele"></div><div class="rez-detalii"></div>
+        <button class="btn mare galben" id="l-inapoi">Înapoi în sat</button></div>
+    </div>
+  </div>
+  <div id="l-loot-disp" class="nota centru"></div>
+  <div id="l-osteni"></div>
+  <div id="l-butoane">
+    <button id="l-iesi" class="btn">Înapoi</button>
+    <button id="l-urmator" class="btn galben">Următorul ➜</button>
+    <button id="l-termina" class="btn rosu" hidden>Termină lupta</button>
+  </div>
+</div>
+
+<div id="modal" hidden><div class="modal-card"></div></div>
+<div id="toasturi"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/date.js"></script>
+<script src="js/net.js"></script>
+<script src="js/deseneaza.js"></script>
+<script src="js/harta.js"></script>
+<script src="js/lupta.js"></script>
+<script src="js/sat.js"></script>
+</body>
+</html>

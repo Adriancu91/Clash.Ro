@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3e2715">
+<meta name="robots" content="noindex">
+<title>Panou admin — Clash of România</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700;800&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body { overflow: auto; background: #2a1a0d; }
+  #adm { max-width: 720px; margin: 0 auto; min-height: 100%; background: var(--pergament); padding-bottom: 40px; }
+  #adm header { background: linear-gradient(#6b4527, #4a2e18); color: #fff; padding: calc(12px + env(safe-area-inset-top)) 14px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  #adm header h1 { margin: 0; font-size: 20px; color: #fff; text-align: left; } #adm header h1 small { display: block; font: 700 12px var(--font); opacity: .8; }
+  .tab-adm { display: flex; gap: 4px; padding: 8px; background: var(--pergament2); position: sticky; top: 0; z-index: 5; overflow-x: auto; }
+  .tab-adm button { flex: 1; border: 0; background: none; padding: 9px 8px; font-weight: 800; font-size: 14px; border-radius: 9px; color: var(--text2); white-space: nowrap; }
+  .tab-adm button.activ { background: #fffaf0; color: var(--albastru); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .bulina { display: inline-block; min-width: 20px; padding: 1px 6px; border-radius: 10px; background: var(--rosu); color: #fff; font-size: 12px; margin-left: 3px; }
+  .continut { padding: 10px 12px; }
+  .filtre { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .filtre button { border: 2px solid #c9b088; background: #fffaf0; border-radius: 20px; padding: 6px 12px; font-weight: 800; font-size: 13px; color: var(--text2); }
+  .filtre button.activ { border-color: var(--albastru); color: var(--albastru); background: #eef3fc; }
+  .cerere { background: #fffaf0; border: 2px solid #c9b088; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; }
+  .cerere.mult { border-color: #e0a10c; background: #fff8e1; }
+  .cerere .sus { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .cerere .suma { font-size: 22px; font-weight: 900; }
+  .cerere .cine { font-weight: 900; font-size: 16px; }
+  .cerere small { display: block; color: var(--text2); }
+  .avert { display: inline-block; background: #e0a10c; color: #fff; font-weight: 900; font-size: 11px; padding: 2px 7px; border-radius: 6px; margin-left: 4px; vertical-align: middle; }
+  .cerere input { margin: 8px 0 0; padding: 8px 10px; font-size: 14px; }
+  .cerere .rand-butoane .btn { font-size: 14px; padding: 8px 6px; }
+  .jucator { display: flex; align-items: center; gap: 8px; background: #fffaf0; border: 1px solid #dcc79f; border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; }
+  .jucator > div { flex: 1; min-width: 0; } .jucator small { display: block; color: var(--text2); font-size: 12px; }
+  .jucator.blocat { background: #f8e3e0; }
+  .jurnal li { display: flex; justify-content: space-between; gap: 8px; }
+  .gol { text-align: center; color: var(--text2); padding: 30px 10px; font-weight: 700; }
+  #login-adm { max-width: 380px; margin: 40px auto; }
+</style>
+</head>
+<body>
+<div id="adm">
+  <header><h1>Panou de control<small>Clash of România</small></h1><button class="btn mic" id="b-iesi" hidden>Ieși</button></header>
+  <div class="motiv"></div>
+  <div id="login-adm" class="continut" hidden>
+    <div id="demo-adm" class="info" hidden>Mod demo — vezi cererile făcute din jocul deschis pe acest telefon.</div>
+    <label>Email admin<input id="e-email" type="email" autocomplete="email"></label>
+    <label>Parolă<input id="e-parola" type="password" autocomplete="current-password"></label>
+    <button class="btn mare galben" id="b-intra">Intră</button>
+    <p id="e-eroare" class="eroare"></p>
+  </div>
+  <div id="panou" hidden>
+    <nav class="tab-adm">
+      <button data-tab="cereri" class="activ">Cereri <span class="bulina" id="nr-noi" hidden>0</span></button>
+      <button data-tab="jucatori">Jucători</button>
+      <button data-tab="jurnal">Jurnal galbeni</button>
+      <button data-tab="setari">Setări</button>
+    </nav>
+    <div class="continut" id="continut"></div>
+  </div>
+</div>
+<div id="modal" hidden><div class="modal-card"></div></div>
+<div id="toasturi"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/date.js"></script>
+<script src="js/net.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
