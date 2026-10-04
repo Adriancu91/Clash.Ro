@@ -41,9 +41,38 @@ const NET = (() => {
       async cere(suma, motiv, pachet) { return ver(await sb.rpc('cere_galbeni', { p_suma: suma, p_motiv: motiv || '', p_pachet: pachet || '' })); },
       async cererileMele() { return ver(await sb.from('cereri').select('*').eq('player_id', user.id).order('creat', { ascending: false }).limit(20)); },
       async adversar(tinta) { const d = ver(await sb.rpc('gaseste_adversar', { p_tinta: tinta || null })); return (d && d[0]) || null; },
-      async atac(aparator, stele, procent, lei, grau) {
-        return ver(await sb.rpc('inregistreaza_atac', { p_aparator: aparator, p_stele: stele, p_procent: procent, p_lei: lei, p_grau: grau }));
+      async atac(aparator, stele, procent, lei, grau, sare) {
+        const baza = { p_aparator: aparator, p_stele: stele, p_procent: procent, p_lei: lei, p_grau: grau };
+        const r = await sb.rpc('inregistreaza_atac', { ...baza, p_sare: sare || 0 });
+        // compatibil cu baza de date veche (înainte de supabase_v2.sql)
+        if (r.error && /function|schema cache/i.test(r.error.message || '')) return ver(await sb.rpc('inregistreaza_atac', baza));
+        return ver(r);
       },
+      async folosesteCetate() { const r = await sb.rpc('foloseste_cetate'); if (r.error && !/function|schema cache/i.test(r.error.message || '')) ver(r); },
+      async areClanuri() { const r = await sb.from('clanuri').select('id', { head: true, count: 'exact' }).limit(1); return !r.error; },
+      // ---- clan ----
+      async cautaClanuri(text) { return ver(await sb.rpc('cauta_clanuri', { p_text: text || '' })) || []; },
+      async clan(id) { return ver(await sb.from('clanuri').select('*').eq('id', id).maybeSingle()); },
+      async creeazaClan(nume, descriere, tip, trofeeMin, steag) { return ver(await sb.rpc('creeaza_clan', { p_nume: nume, p_descriere: descriere, p_tip: tip, p_trofee_min: trofeeMin, p_steag: steag })); },
+      async intraInClan(id) { return ver(await sb.rpc('intra_in_clan', { p_clan: id })); },
+      async parasesteClan() { ver(await sb.rpc('paraseste_clan')); },
+      async schimbaRol(id, rol) { ver(await sb.rpc('schimba_rol', { p_player: id, p_rol: rol })); },
+      async editeazaClan(descriere, tip, trofeeMin, steag) { ver(await sb.rpc('editeaza_clan', { p_descriere: descriere, p_tip: tip, p_trofee_min: trofeeMin, p_steag: steag })); },
+      async membri(clanId) { return ver(await sb.from('players').select('id,nume,trofee,clan_rol,regiune,actualizat').eq('clan_id', clanId).order('trofee', { ascending: false })); },
+      async cereriClan(clanId) { return ver(await sb.from('clan_cereri').select('*').eq('clan_id', clanId).order('creat')); },
+      async raspundeCerere(id, da) { ver(await sb.rpc('raspunde_cerere', { p_cerere: id, p_accept: da })); },
+      async mesaje(clanId, dupa) { let q = sb.from('mesaje').select('*').eq('clan_id', clanId).order('id', { ascending: false }).limit(60); if (dupa) q = q.gt('id', dupa); return (ver(await q) || []).reverse(); },
+      async mesajeActualizate(clanId, ids) { if (!ids.length) return []; return ver(await sb.from('mesaje').select('id,date').in('id', ids)) || []; },
+      async trimiteMesaj(text) { ver(await sb.rpc('trimite_mesaj', { p_text: text })); },
+      async cereTrupe(text, cap) { ver(await sb.rpc('cere_trupe', { p_text: text, p_cap: cap })); },
+      async doneaza(id, tip, nivel) { return ver(await sb.rpc('doneaza', { p_mesaj: id, p_tip: tip, p_nivel: nivel })); },
+      async razboiCurent() { return ver(await sb.rpc('razboi_curent')); },
+      async razboiMembri(id) { return ver(await sb.from('razboi_membri').select('*').eq('razboi_id', id).order('pozitie')) || []; },
+      async razboiAtacuri(id) { return ver(await sb.from('razboi_atacuri').select('*').eq('razboi_id', id).order('id')) || []; },
+      async cautareRazboi(clanId) { return ver(await sb.from('razboi_cautari').select('*').eq('clan_id', clanId).maybeSingle()); },
+      async cautaRazboi(n) { return ver(await sb.rpc('cauta_razboi', { p_marime: n })); },
+      async anuleazaCautareRazboi() { ver(await sb.rpc('anuleaza_cautare_razboi')); },
+      async atacRazboi(rid, tinta, stele, procent) { return ver(await sb.rpc('ataca_razboi', { p_razboi: rid, p_tinta: tinta, p_stele: stele, p_procent: procent })); },
       async revendica() { return ver(await sb.rpc('revendica_atacuri')) || []; },
       async cumparaScut(ore) { return ver(await sb.rpc('cumpara_scut', { p_ore: ore })); },
       async clasament() { return ver(await sb.from('players').select('id,nume,regiune,trofee').eq('blocat', false).order('trofee', { ascending: false }).limit(50)); },
@@ -111,6 +140,8 @@ const NET = (() => {
     async cererileMele() { return ia().cereri.slice(0, 20); },
     async adversar() { return null; },
     async atac() { err('Nu există alți jucători în modul demo.'); },
+    async folosesteCetate() {},
+    async areClanuri() { return false; },
     async revendica() { return []; },
     async cumparaScut(ore) {
       const pret = ore === 24 ? 100 : 250; const d = cheltuieDemo(pret, 'Scut ' + ore + 'h');

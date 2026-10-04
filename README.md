@@ -2,21 +2,30 @@
 
 Joc de strategie pentru telefon: îți ridici satul, antrenezi haiduci, cucerești cetățile României și ataci satele altor jucători. Totul e gratuit — contul servește doar ca să-ți păstreze progresul. Galbenii (moneda „premium”) se cer gratuit din Târg și îi aprobă adminul din panoul de control.
 
-## Ce e în joc
+## Ce e în joc (v2 — reguli ca în Clash of Clans)
 
-- **Satul** (20×20): Primăria, Mori (grâu), Mine de aur (lei), Hambare, Vistierii, Cazarma, Tunuri, Turnuri de arcași, Ziduri.
-- **Oșteni**: Haiduc, Arcaș, Călăreț, Pandur.
-- **Harta României**: 9 regiuni (vezi câți jucători sunt în fiecare și îi poți ataca) + 11 cetăți de cucerit pe rând (de la Cetatea Neamțului la Sarmizegetusa).
-- **Lupte**: 3 minute, 3 stele, pradă din resursele adversarului, trofee, scut după ce ești atacat.
-- **Târg**: ceri galbeni gratuit (pachete sau sumă aleasă), îi cheltui pe meșteri, grăbire, umplere depozite, scut.
-- **Panou admin** (`admin.html`): Aprobă / Pune în așteptare / Respinge cereri, dai sau iei galbeni, blochezi jucători, vezi jurnalul de galbeni.
+- **Primăria până la nivelul 10**, sat de 30×30 cu zoom din două degete.
+- **Resurse**: lei, grâu și **sare** (de la Primăria 7, pentru eroi și Bârlog). Galbenii se cer gratuit din Târg și îi aprobă adminul.
+- **Clădiri**: mori, mine, saline, hambare, vistierii, depozit de sare, tabere, cazarmă, Bârlog, Laborator, Atelier de vrăji, Cetatea Clanului, altarele eroilor.
+- **Apărări**: tun, turnul arcașilor, mortier, balistă (anti-aer), Turnul Solomonarului, arbaleta uriașă, turnul de foc, ziduri.
+- **Capcane ascunse**: butoiul cu pulbere, groapa cu țepi, capcana de cer, bomba mare.
+- **15 oșteni**: Haiduc, Arcaș, Pandur, Călăreț, Berbec, Aerostat, Solomonar, Zâna, Zmeul, Căpcăunul; din Bârlog (cu sare): Strigoi, Hăitașul, Ielele, Moroiul, Baba Cloanța.
+- **5 vrăji**: Fulger, Vindecare, Furie, Săritură, Îngheț.
+- **Eroi**: Voievodul și Domnița Arcașă, cu niveluri și abilitate specială; apără satul când nu atacă.
+- **Laborator**: îmbunătățești oștenii și vrăjile.
+- **Lupte**: 3 minute, 3 stele, trofee și scut ca în CoC (30% → 12h, 60% → 14h, 90% → 16h), ligi cu bonus la victorie.
+- **Clanuri**: chat, cereri și donații de oșteni pentru Cetatea Clanului, roluri (lider, colider, bătrân, membru).
+- **Războaie între clanuri**: o oră de pregătire, 23 de ore de luptă, 2 atacuri de fiecare, câștigă clanul cu mai multe stele.
+- **Harta României**: 9 regiuni cu jucătorii lor și 19 cetăți de cucerit pe rând.
+- **Panou admin** (`admin.html`): aprobi / pui în așteptare / respingi cererile de galbeni.
 
 ## Cum îl pui online (o singură dată)
 
 ### 1. Baza de date (Supabase)
 1. Intră în proiectul tău Supabase → **SQL Editor** → **New query**.
 2. Copiază tot conținutul fișierului `supabase.sql`, lipește-l și apasă **Run**.
-3. (Recomandat) **Authentication → Sign In / Providers → Email**: oprește **Confirm email**, ca prietenii să intre în joc imediat după ce își fac cont.
+3. Apoi, într-un query nou, fă la fel cu fișierul **`supabase_v2.sql`** (clanuri, războaie, sare). Se poate rula de mai multe ori fără probleme.
+4. (Recomandat) **Authentication → Sign In / Providers → Email**: oprește **Confirm email**, ca prietenii să intre în joc imediat după ce își fac cont.
 
 ### 2. Legătura joc ↔ Supabase
 1. Supabase → **Project Settings → API** (sau butonul **Connect**).
