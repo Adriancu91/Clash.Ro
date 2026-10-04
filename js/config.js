@@ -7,6 +7,6 @@
 //  Dacă lași gol, jocul merge în mod demo (salvare doar pe telefon).
 // =====================================================================
 window.CONFIG = {
-  SUPABASE_URL: '',
-  SUPABASE_KEY: '',
+  SUPABASE_URL: 'https://ssbsdobpofltobskztyr.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_KAS2fFWfjQT-71_Z2E7_Sw_ZBQV7YVi',
 };
