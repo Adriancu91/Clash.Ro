@@ -711,7 +711,9 @@ async function deschideProfil() {
     <h3>Apărări</h3>${jurnal}
     <h3>Pune jocul pe ecranul telefonului</h3>
     <p class="nota">Android (Chrome): meniul ⋮ → „Adaugă pe ecranul de pornire”.<br>iPhone (Safari): butonul Partajează → „Adaugă pe ecranul principal”.</p>
+    <div id="buton-admin"></div>
     <div class="rand-butoane">${NET.demo ? '<button class="btn rosu" data-act="reset-demo">Șterge progresul demo</button>' : '<button class="btn" data-act="iesi">Ieși din cont</button>'}</div>`, 'inalta');
+  NET.esteAdmin().then(da => { const b = $('#buton-admin'); if (da && b && !NET.demo) b.innerHTML = '<a class="btn mare galben" href="admin.html">⚙ Panou admin</a>'; }).catch(() => {});
   try {
     const l = await NET.clasament(); const box = $('#clasament'); if (!box) return;
     box.innerHTML = '<ol class="clasament">' + l.map((p, i) => `<li class="${p.id === NET.idCurent() ? 'eu' : ''}"><span class="loc">${i + 1}</span><b>${esc(p.nume)}</b>
