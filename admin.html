@@ -13,7 +13,7 @@
   body { overflow: auto; background: #2a1a0d; }
   #adm { max-width: 720px; margin: 0 auto; min-height: 100%; background: var(--pergament); padding-bottom: 40px; }
   #adm header { background: linear-gradient(#6b4527, #4a2e18); color: #fff; padding: calc(12px + env(safe-area-inset-top)) 14px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  #adm header h1 { margin: 0; font-size: 20px; color: #fff; text-align: left; } #adm header h1 small { display: block; font: 700 12px var(--font); opacity: .8; }
+  #adm header h1 { margin: 0; font-size: 20px; color: #fff; text-align: left; flex: 1; } #adm header h1 small { display: block; font: 700 12px var(--font); opacity: .8; }
   .tab-adm { display: flex; gap: 4px; padding: 8px; background: var(--pergament2); position: sticky; top: 0; z-index: 5; overflow-x: auto; }
   .tab-adm button { flex: 1; border: 0; background: none; padding: 9px 8px; font-weight: 800; font-size: 14px; border-radius: 9px; color: var(--text2); white-space: nowrap; }
   .tab-adm button.activ { background: #fffaf0; color: var(--albastru); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
@@ -41,7 +41,7 @@
 </head>
 <body>
 <div id="adm">
-  <header><h1>Panou de control<small>Clash of România</small></h1><button class="btn mic" id="b-iesi" hidden>Ieși</button></header>
+  <header><a class="btn mic" href="index.html" id="b-joc">← Înapoi în joc</a><h1>Panou de control<small>Clash of România</small></h1><button class="btn mic" id="b-iesi" hidden>Ieși</button></header>
   <div class="motiv"></div>
   <div id="login-adm" class="continut" hidden>
     <div id="demo-adm" class="info" hidden>Mod demo — vezi cererile făcute din jocul deschis pe acest telefon.</div>

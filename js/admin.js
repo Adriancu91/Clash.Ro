@@ -39,7 +39,7 @@ $('#b-intra').onclick = async () => {
   catch (e) { $('#e-eroare').textContent = e.message; }
 };
 $('#e-parola').onkeydown = e => { if (e.key === 'Enter') $('#b-intra').click(); };
-$('#b-iesi').onclick = async () => { await NET.iesi(); location.reload(); };
+$('#b-iesi').onclick = async () => { if (!await modal('<p>Ieși din cont? Vei ieși și din joc pe acest telefon.</p><div class="rand-butoane"><button class="btn" data-raspuns="nu">Nu</button><button class="btn rosu" data-raspuns="da">Ieși</button></div>')) return; await NET.iesi(); location.href = 'index.html'; };
 
 async function verificaAdmin() {
   let ok = false;
