@@ -263,6 +263,28 @@ for (const k in CLADIRI) {
   while (d.maxTH.length < MAX_TH) d.maxTH.push(d.maxTH[d.maxTH.length - 1]);
   while (d.lim.length < MAX_TH) d.lim.push(d.lim[d.lim.length - 1]);
 }
+CLADIRI.primarie.maxTH = Array(MAX_TH).fill(MAX_TH);
+
+// Depozitul maxim posibil la o anumită Primărie (toate depozitele la nivel maxim).
+function depozitMaxim(res, th) {
+  th = Math.max(1, Math.min(MAX_TH, th));
+  let c = res === 'sare' ? CLADIRI.primarie.stocSare[th - 1] : CLADIRI.primarie.stoc[th - 1];
+  const tip = res === 'lei' ? 'vistierie' : res === 'grau' ? 'hambar' : 'depozitSare';
+  const n = CLADIRI[tip].lim[th - 1], lv = CLADIRI[tip].maxTH[th - 1];
+  if (n && lv) c += n * CLADIRI[tip].stoc[lv - 1];
+  return c;
+}
+// Niciun preț nu are voie să depășească 90% din ce încape în depozite când se deblochează nivelul.
+const plafon = (pret, res, th) => {
+  let c = depozitMaxim(res, th); while (!c && th < MAX_TH) c = depozitMaxim(res, ++th);
+  return Math.min(pret, Math.floor(c * 0.9 / 1000) * 1000 || pret);
+};
+for (const [k, d] of Object.entries(CLADIRI)) {
+  for (let L = 1; L <= d.max; L++) {
+    const th = k === 'primarie' ? Math.max(1, L - 1) : d.maxTH.findIndex(v => v >= L) + 1;
+    if (th > 0) d.pret[L - 1] = plafon(d.pret[L - 1], d.cost, th);
+  }
+}
 const LIMITE = Object.fromEntries(Object.entries(CLADIRI).map(([k, d]) => [k, d.lim]));
 
 const CATEGORII = [
@@ -322,12 +344,20 @@ const EROI = {
 };
 const erouHp = (e, n) => Math.round(EROI[e].hp * (1 + 0.05 * (n - 1)));
 const erouDps = (e, n) => Math.round(EROI[e].dps * (1 + 0.04 * (n - 1)));
-const erouPret = (e, n) => (e === 'voievod' ? 5000 + 1500 * n : e === 'domnita' ? 10000 + 2000 * n : 20000 + 2500 * n); // n = nivel actual -> n+1
+const erouPret = (e, n) => {
+  const brut = e === 'voievod' ? 5000 + 1500 * n : e === 'domnita' ? 10000 + 2000 * n : 20000 + 2500 * n;
+  const th = EROI[e].maxTH.findIndex(v => v >= n + 1) + 1 || MAX_TH;
+  return plafon(brut, 'sare', th);
+}; // n = nivel actual -> n+1
 const erouTimp = n => Math.min(5 * ZI, 6 * ORA * n);
 
 // ---------------- laborator ----------------
 const labTimp = n => [0, 0, 6 * ORA, ZI, 2 * ZI, 3 * ZI, 4 * ZI, 5 * ZI, 6 * ZI, 7 * ZI, 8 * ZI, 9 * ZI, 10 * ZI, 11 * ZI][Math.min(13, n)]; // pentru a ajunge la nivelul n
-const labPret = (baza, n) => Math.round(baza * Math.pow(3, Math.min(n - 2, 5)) * Math.pow(1.3, Math.max(0, n - 7)) / 100) * 100; // pentru a ajunge la nivelul n
+const labPret = (baza, n, res = 'grau') => {
+  const brut = Math.round(baza * Math.pow(3, Math.min(n - 2, 5)) * Math.pow(1.3, Math.max(0, n - 7)) / 100) * 100;
+  const th = CLADIRI.laborator.maxTH.findIndex(v => v >= n - 1) + 1 || MAX_TH;
+  return plafon(brut, res, th);
+}; // pentru a ajunge la nivelul n
 const nivelMaxLab = (def, nivLab) => Math.min(def.max, nivLab + 1);
 
 // ---------------- ligi ----------------

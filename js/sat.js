@@ -15,6 +15,7 @@ function fmtTimp(sec) {
   sec = Math.max(0, Math.ceil(sec));
   if (sec < 60) return sec + 's';
   if (sec < 3600) { const m = Math.floor(sec / 60), s = sec % 60; return m + 'm' + (s ? ' ' + s + 's' : ''); }
+  if (sec >= 86400) { const z = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600); return z + (z === 1 ? ' zi' : ' zile') + (h ? ' ' + h + 'h' : ''); }
   const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); return h + 'h' + (m ? ' ' + m + 'm' : '');
 }
 function fmtScurt(n) {
@@ -867,7 +868,7 @@ function deschideLaborator() {
     if (S.labUpg && S.labUpg.tip === k) dr = `<em>în lucru</em>`;
     else if (n >= d.max) dr = '<em>maxim</em>';
     else if (n >= mx) dr = `<em>Lab nv ${n}</em>`;
-    else { const pret = labPret(d.labBaza, n + 1); const res = d.cost === 'sare' ? 'sare' : 'grau';
+    else { const res = d.cost === 'sare' ? 'sare' : 'grau'; const pret = labPret(d.labBaza, n + 1, res);
       dr = `<button class="btn mic ${S.res[res] >= pret && !S.labUpg ? 'verde' : 'gri'}" data-act="lab" data-tip="${k}" ${S.labUpg ? 'disabled' : ''}>nv ${n + 1}<small>${cost(res, pret)} · ${fmtTimp(labTimp(n + 1))}</small></button>`; }
     return `<div class="osten"><canvas data-mini="${k}" data-fel="${tipCl}"></canvas><div class="osten-info"><b>${d.nume} <span class="niv-mic">nv ${n}/${d.max}</span></b></div><div class="osten-btn">${dr}</div></div>`;
   };
@@ -885,7 +886,7 @@ function cerceteaza(tip) {
   if (S.labUpg) return toast('Laboratorul e ocupat.', 'eroare');
   const d = OSTENI[tip] || VRAJI[tip]; const n = S.lab[tip] || 1;
   if (n >= nivelMaxLab(d, nivelLab())) return toast('Îmbunătățește întâi Laboratorul.', 'eroare');
-  const res = d.cost === 'sare' ? 'sare' : 'grau'; const pret = labPret(d.labBaza, n + 1);
+  const res = d.cost === 'sare' ? 'sare' : 'grau'; const pret = labPret(d.labBaza, n + 1, res);
   if (S.res[res] < pret) return lipsaResurse(res, pret - S.res[res]);
   S.res[res] -= pret; S.labUpg = { tip, la: n + 1, pana: acum() + labTimp(n + 1) * 1000 };
   salveaza(); actualizeazaBara(); deschideLaborator();
