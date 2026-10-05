@@ -129,6 +129,7 @@ returns int language sql immutable as $$
   select case p_tip
     when 'haiduc' then 1 when 'arcas' then 1 when 'pandur' then 5 when 'calaret' then 1 when 'berbec' then 2
     when 'aerostat' then 5 when 'solomonar' then 4 when 'zana' then 14 when 'zmeu' then 20 when 'capcaun' then 25
+    when 'ortac' then 6 when 'balaur' then 30
     when 'strigoi' then 2 when 'haitas' then 5 when 'iele' then 8 when 'moroi' then 30 when 'babaCloanta' then 12
     else null end;
 $$;
@@ -367,7 +368,7 @@ begin
   select max(creat) into ultim from public.mesaje where player_id = eu.id and tip = 'donatie';
   if ultim is not null and ultim > now() - interval '5 minutes' then raise exception 'Poți cere oșteni o dată la 5 minute.'; end if;
   select coalesce(sum(public.loc_osten(x->>'tip')), 0) into folosit from jsonb_array_elements(eu.cetate) x;
-  p_cap := least(30, greatest(10, coalesce(p_cap, 10)));
+  p_cap := least(45, greatest(10, coalesce(p_cap, 10)));
   if folosit >= p_cap then raise exception 'Cetatea ta e deja plină.'; end if;
   update public.mesaje set date = date || '{"inchis": true}'::jsonb where player_id = eu.id and tip = 'donatie' and not coalesce((date->>'inchis')::boolean, false);
   insert into public.mesaje(clan_id, player_id, nume, tip, text, date)

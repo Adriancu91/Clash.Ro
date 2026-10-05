@@ -6,8 +6,8 @@
 //  lim = câte clădiri de acel fel poți avea la Primăria 1..10.
 // ====================================================================
 
-const GRID = 30;              // satul are 30 x 30 pătrățele
-const MAX_TH = 10;
+const GRID = 40;              // satul are 40 x 40 pătrățele
+const MAX_TH = 15;
 const MIN = 60, ORA = 3600, ZI = 86400;
 const G = (b, f, n, r = 1) => Array.from({ length: n }, (_, i) => Math.round(b * Math.pow(f, i) / r) * r);
 const L10 = v => Array(10).fill(v);
@@ -190,13 +190,85 @@ const CLADIRI = {
     maxTH: [0, 0, 0, 0, 0, 2, 2, 3, 3, 3], lim: [0, 0, 0, 0, 0, 1, 2, 3, 4, 5],
   },
 };
-for (const k in CLADIRI) CLADIRI[k].max = CLADIRI[k].pret.length;
+
+// ---------------- clădiri noi (Primăria 11+) ----------------
+Object.assign(CLADIRI, {
+  vultur: {
+    nume: 'Vulturul Carpaților', desc: 'Artilerie uriașă care bate tot satul. Se trezește după ce dușmanul trimite multă armată.', cat: 'aparare', size: 3, cost: 'lei', aparare: true,
+    pret: [6000000, 7500000, 9000000, 10500000, 12000000], timp: [10 * ZI, 11 * ZI, 12 * ZI, 13 * ZI, 14 * ZI],
+    hp: G(4000, 1.08, 5), dps: G(30, 1.15, 5), interval: 10, raza: 40, razaMin: 5, stropire: 1.5, tinte: 'ambele', activare: 60,
+    maxTH: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 5, 5], lim: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  },
+  catapulta: {
+    nume: 'Catapulta', desc: 'Aruncă bolovani care se sparg și lovesc tot ce e în jur, pe pământ și în aer.', cat: 'aparare', size: 2, cost: 'lei', aparare: true,
+    pret: [12000000, 13500000, 15000000], timp: [12 * ZI, 13 * ZI, 14 * ZI],
+    hp: G(3600, 1.08, 3), dps: [33, 38, 43], interval: 3, raza: 6.7, razaMin: 2, stropire: 1.5, tinte: 'ambele',
+    maxTH: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3], lim: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2],
+  },
+  altarVraci: {
+    nume: 'Altarul Vraciului', desc: 'Casa Vraciului, eroul care îi ocrotește pe ceilalți. Îl îmbunătățești cu galbeni-sare.', cat: 'armata', size: 3, cost: 'sare', erou: 'vraci',
+    pret: [20000], timp: [MIN], hp: [250], maxTH: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1], lim: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  },
+});
+CLADIRI.altarVraci.desc = 'Casa Vraciului, eroul care îi ocrotește pe ceilalți. Îl îmbunătățești cu sare.';
+
+// ---------------- extinderea la Primăria 15 ----------------
+// [niveluri noi, maxTH pentru Primăria 11..15, lim pentru 11..15, capacitate nouă (opțional)]
+const EXTINDERE = {
+  primarie:      [5, [11, 12, 13, 14, 15], [1, 1, 1, 1, 1]],
+  cetateClan:    [3, [6, 7, 7, 8, 8], [1, 1, 1, 1, 1], [35, 40, 45]],
+  moara:         [3, [11, 12, 13, 13, 13], [7, 7, 7, 7, 7]],
+  mina:          [3, [11, 12, 13, 13, 13], [7, 7, 7, 7, 7]],
+  minaSare:      [3, [7, 8, 9, 9, 9], [3, 3, 3, 3, 3]],
+  hambar:        [4, [11, 12, 13, 14, 14], [4, 4, 4, 4, 4]],
+  vistierie:     [4, [11, 12, 13, 14, 14], [4, 4, 4, 4, 4]],
+  depozitSare:   [4, [7, 8, 9, 10, 10], [1, 1, 1, 1, 1]],
+  tabara:        [4, [9, 10, 10, 11, 12], [4, 4, 4, 4, 4], [65, 70, 75, 80]],
+  cazarma:       [2, [11, 12, 12, 12, 12], [1, 1, 1, 1, 1]],
+  barlog:        [2, [6, 7, 7, 7, 7], [1, 1, 1, 1, 1]],
+  laborator:     [5, [8, 9, 10, 11, 12], [1, 1, 1, 1, 1]],
+  atelier:       [2, [5, 6, 7, 7, 7], [1, 1, 1, 1, 1], [11, 12]],
+  altarVoievod:  [0, [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]],
+  altarDomnita:  [0, [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]],
+  tun:           [5, [11, 12, 13, 14, 15], [7, 7, 7, 7, 7]],
+  turn:          [5, [11, 12, 13, 14, 15], [8, 8, 8, 8, 8]],
+  mortier:       [4, [9, 10, 11, 12, 12], [4, 4, 4, 4, 4]],
+  balista:       [4, [9, 10, 11, 12, 12], [4, 4, 4, 4, 4]],
+  turnSolomonar: [4, [9, 10, 11, 12, 12], [5, 5, 5, 5, 5]],
+  arbaleta:      [4, [5, 6, 7, 7, 8], [4, 4, 4, 4, 4]],
+  turnFoc:       [4, [4, 5, 6, 6, 7], [2, 3, 3, 3, 3]],
+  zid:           [5, [11, 12, 13, 14, 15], [300, 300, 325, 325, 350]],
+  capcanaPulbere:[3, [7, 7, 8, 8, 9], [7, 7, 7, 7, 7]],
+  tepi:          [3, [6, 6, 7, 7, 8], [7, 7, 7, 7, 7]],
+  capcanaAer:    [3, [5, 5, 6, 6, 7], [6, 6, 6, 6, 6]],
+  bombaMare:     [3, [4, 4, 5, 5, 6], [6, 6, 6, 6, 6]],
+};
+(function extinde() {
+  const creste = (arr, n, f, max) => { for (let i = 0; i < n; i++) { const v = arr[arr.length - 1] * f; arr.push(max ? Math.min(max, Math.round(v)) : (v < 100 ? Math.round(v * 10) / 10 : Math.round(v / 100) * 100 || Math.round(v))); } };
+  for (const [k, [n, mx, lim, cap]] of Object.entries(EXTINDERE)) {
+    const d = CLADIRI[k];
+    if (n) {
+      creste(d.pret, n, 1.3); creste(d.timp, n, 1.12, 14 * ZI);
+      if (d.hp) creste(d.hp, n, 1.1);
+      for (const c of ['dps', 'dpsMax', 'prod', 'dmg']) if (d[c]) creste(d[c], n, 1.12);
+      for (const c of ['cap', 'stoc']) if (d[c]) creste(d[c], n, 1.2);
+      if (d.stocSare) creste(d.stocSare, n, 1.4);
+      if (d.capacitate) { if (cap) d.capacitate.push(...cap); else creste(d.capacitate, n, 1.06); }
+    }
+    d.maxTH = d.maxTH.concat(mx); d.lim = d.lim.concat(lim);
+  }
+})();
+for (const k in CLADIRI) {
+  const d = CLADIRI[k]; d.max = d.pret.length;
+  while (d.maxTH.length < MAX_TH) d.maxTH.push(d.maxTH[d.maxTH.length - 1]);
+  while (d.lim.length < MAX_TH) d.lim.push(d.lim[d.lim.length - 1]);
+}
 const LIMITE = Object.fromEntries(Object.entries(CLADIRI).map(([k, d]) => [k, d.lim]));
 
 const CATEGORII = [
   ['resurse', 'Resurse', ['moara', 'mina', 'hambar', 'vistierie', 'minaSare', 'depozitSare']],
-  ['armata', 'Armată', ['tabara', 'cazarma', 'barlog', 'laborator', 'atelier', 'cetateClan', 'altarVoievod', 'altarDomnita']],
-  ['aparare', 'Apărare', ['tun', 'turn', 'mortier', 'balista', 'turnSolomonar', 'arbaleta', 'turnFoc', 'zid']],
+  ['armata', 'Armată', ['tabara', 'cazarma', 'barlog', 'laborator', 'atelier', 'cetateClan', 'altarVoievod', 'altarDomnita', 'altarVraci']],
+  ['aparare', 'Apărare', ['tun', 'turn', 'mortier', 'balista', 'turnSolomonar', 'arbaleta', 'turnFoc', 'vultur', 'catapulta', 'zid']],
   ['capcana', 'Capcane', ['capcanaPulbere', 'tepi', 'capcanaAer', 'bombaMare']],
 ];
 const ORDINE_CONSTRUIRE = CATEGORII.flatMap(c => c[2]);
@@ -204,54 +276,58 @@ const ORDINE_CONSTRUIRE = CATEGORII.flatMap(c => c[2]);
 // ---------------- oșteni ----------------
 // dps = daune pe secundă la nivelul 1; viteza în pătrățele pe secundă.
 const OSTENI = {
-  haiduc:   { nume: 'Haiduc', desc: 'Luptă cu bâta. Atacă orice clădire.', hp: 45, dps: 8, interval: 1, raza: 0.6, viteza: 0.9, loc: 1, pret: 25, cost: 'grau', timp: 5, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 1, max: 7, labBaza: 50000, culoare: '#7a4a2a' },
-  arcas:    { nume: 'Arcaș', desc: 'Trage peste ziduri, de departe. E fragil.', hp: 20, dps: 7, interval: 1, raza: 2.3, viteza: 1.35, loc: 1, pret: 50, cost: 'grau', timp: 6, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 2, max: 7, labBaza: 50000, culoare: '#3d7a3a' },
-  pandur:   { nume: 'Pandur', desc: 'Uriaș și greu de doborât. Merge doar la apărări.', hp: 300, dps: 11, interval: 2, raza: 0.6, viteza: 0.68, loc: 5, pret: 250, cost: 'grau', timp: 30, tinta: 'aparare', cladire: 'cazarma', nivelCladire: 3, max: 7, labBaza: 100000, culoare: '#2a4d8f' },
-  calaret:  { nume: 'Călăreț', desc: 'Foarte rapid. Vânează resursele, unde face daune duble.', hp: 25, dps: 11, interval: 1, raza: 0.6, viteza: 1.8, loc: 1, pret: 25, cost: 'grau', timp: 7, tinta: 'resurse', cladire: 'cazarma', nivelCladire: 4, max: 6, labBaza: 50000, culoare: '#c08a2a', dubluResurse: true },
-  berbec:   { nume: 'Berbec', desc: 'Aleargă la ziduri și le sparge (daune de 40 de ori).', hp: 20, dps: 6, interval: 1, raza: 0.6, viteza: 1.35, loc: 2, pret: 1000, cost: 'grau', timp: 15, tinta: 'ziduri', cladire: 'cazarma', nivelCladire: 5, max: 6, labBaza: 100000, culoare: '#6b5a48', kamikaze: 40, stropire: 1.3 },
-  aerostat: { nume: 'Aerostat', desc: 'Zboară spre apărări și le bombardează.', hp: 150, dps: 25, interval: 3, raza: 0.6, viteza: 0.56, loc: 5, pret: 2000, cost: 'grau', timp: 30, tinta: 'aparare', cladire: 'cazarma', nivelCladire: 6, max: 6, labBaza: 150000, culoare: '#b23a2e', aer: true, stropire: 0.8 },
-  solomonar:{ nume: 'Solomonar', desc: 'Aruncă flăcări care lovesc mai multe clădiri deodată.', hp: 75, dps: 50, interval: 1.5, raza: 2, viteza: 0.9, loc: 4, pret: 1500, cost: 'grau', timp: 40, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 7, max: 6, labBaza: 120000, culoare: '#5b3a8c', stropire: 0.5 },
-  zana:     { nume: 'Zâna', desc: 'Zboară și vindecă oștenii de pe pământ. Nu atacă.', hp: 500, dps: 35, interval: 0.7, raza: 3.3, viteza: 0.9, loc: 14, pret: 5000, cost: 'grau', timp: 80, tinta: 'vindeca', cladire: 'cazarma', nivelCladire: 8, max: 4, labBaza: 450000, culoare: '#f2e6a6', aer: true, vindecator: true },
-  zmeu:     { nume: 'Zmeul', desc: 'Balaur zburător care scuipă foc peste tot satul.', hp: 1900, dps: 140, interval: 1.25, raza: 2, viteza: 0.9, loc: 20, pret: 25000, cost: 'grau', timp: 120, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 9, max: 5, labBaza: 2000000, culoare: '#2f7a4a', aer: true, stropire: 0.5 },
-  capcaun:  { nume: 'Căpcăunul', desc: 'Uriașul de fier: lovituri cumplite, dar lente.', hp: 2800, dps: 240, interval: 1.8, raza: 0.6, viteza: 0.9, loc: 25, pret: 28000, cost: 'grau', timp: 180, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 10, max: 5, labBaza: 3000000, culoare: '#3a3f4a' },
+  haiduc:   { nume: 'Haiduc', desc: 'Luptă cu bâta. Atacă orice clădire.', hp: 45, dps: 8, interval: 1, raza: 0.6, viteza: 0.9, loc: 1, pret: 25, cost: 'grau', timp: 5, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 1, max: 10, labBaza: 50000, culoare: '#7a4a2a' },
+  arcas:    { nume: 'Arcaș', desc: 'Trage peste ziduri, de departe. E fragil.', hp: 20, dps: 7, interval: 1, raza: 2.3, viteza: 1.35, loc: 1, pret: 50, cost: 'grau', timp: 6, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 2, max: 10, labBaza: 50000, culoare: '#3d7a3a' },
+  pandur:   { nume: 'Pandur', desc: 'Uriaș și greu de doborât. Merge doar la apărări.', hp: 300, dps: 11, interval: 2, raza: 0.6, viteza: 0.68, loc: 5, pret: 250, cost: 'grau', timp: 30, tinta: 'aparare', cladire: 'cazarma', nivelCladire: 3, max: 10, labBaza: 100000, culoare: '#2a4d8f' },
+  calaret:  { nume: 'Călăreț', desc: 'Foarte rapid. Vânează resursele, unde face daune duble.', hp: 25, dps: 11, interval: 1, raza: 0.6, viteza: 1.8, loc: 1, pret: 25, cost: 'grau', timp: 7, tinta: 'resurse', cladire: 'cazarma', nivelCladire: 4, max: 9, labBaza: 50000, culoare: '#c08a2a', dubluResurse: true },
+  berbec:   { nume: 'Berbec', desc: 'Aleargă la ziduri și le sparge (daune de 40 de ori).', hp: 20, dps: 6, interval: 1, raza: 0.6, viteza: 1.35, loc: 2, pret: 1000, cost: 'grau', timp: 15, tinta: 'ziduri', cladire: 'cazarma', nivelCladire: 5, max: 9, labBaza: 100000, culoare: '#6b5a48', kamikaze: 40, stropire: 1.3 },
+  aerostat: { nume: 'Aerostat', desc: 'Zboară spre apărări și le bombardează.', hp: 150, dps: 25, interval: 3, raza: 0.6, viteza: 0.56, loc: 5, pret: 2000, cost: 'grau', timp: 30, tinta: 'aparare', cladire: 'cazarma', nivelCladire: 6, max: 9, labBaza: 150000, culoare: '#b23a2e', aer: true, stropire: 0.8 },
+  solomonar:{ nume: 'Solomonar', desc: 'Aruncă flăcări care lovesc mai multe clădiri deodată.', hp: 75, dps: 50, interval: 1.5, raza: 2, viteza: 0.9, loc: 4, pret: 1500, cost: 'grau', timp: 40, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 7, max: 9, labBaza: 120000, culoare: '#5b3a8c', stropire: 0.5 },
+  zana:     { nume: 'Zâna', desc: 'Zboară și vindecă oștenii de pe pământ. Nu atacă.', hp: 500, dps: 35, interval: 0.7, raza: 3.3, viteza: 0.9, loc: 14, pret: 5000, cost: 'grau', timp: 80, tinta: 'vindeca', cladire: 'cazarma', nivelCladire: 8, max: 7, labBaza: 450000, culoare: '#f2e6a6', aer: true, vindecator: true },
+  zmeu:     { nume: 'Zmeul', desc: 'Balaur zburător care scuipă foc peste tot satul.', hp: 1900, dps: 140, interval: 1.25, raza: 2, viteza: 0.9, loc: 20, pret: 25000, cost: 'grau', timp: 120, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 9, max: 8, labBaza: 2000000, culoare: '#2f7a4a', aer: true, stropire: 0.5 },
+  capcaun:  { nume: 'Căpcăunul', desc: 'Uriașul de fier: lovituri cumplite, dar lente.', hp: 2800, dps: 240, interval: 1.8, raza: 0.6, viteza: 0.9, loc: 25, pret: 28000, cost: 'grau', timp: 180, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 10, max: 8, labBaza: 3000000, culoare: '#3a3f4a' },
+  ortac:    { nume: 'Ortacul', desc: 'Miner care sapă pe sub ziduri. Cât sapă, apărările nu-l văd.', hp: 550, dps: 80, interval: 1.7, raza: 0.6, viteza: 1.4, loc: 6, pret: 4200, cost: 'grau', timp: 60, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 11, max: 7, labBaza: 4000000, culoare: '#6a5440', subteran: true },
+  balaur:   { nume: 'Balaurul', desc: 'Balaur cu trei capete: fulgerul lui sare de la o clădire la alta.', hp: 3200, dps: 240, interval: 3.5, raza: 2, viteza: 0.65, loc: 30, pret: 36000, cost: 'grau', timp: 180, tinta: 'oricare', cladire: 'cazarma', nivelCladire: 12, max: 5, labBaza: 6000000, culoare: '#3a5a9a', aer: true, lant: 4 },
   // oștenii întunericului (sare)
-  strigoi:  { nume: 'Strigoi', desc: 'Zboară repede peste ziduri.', hp: 58, dps: 38, interval: 1, raza: 1.8, viteza: 1.8, loc: 2, pret: 6, cost: 'sare', timp: 18, tinta: 'oricare', cladire: 'barlog', nivelCladire: 1, max: 5, labBaza: 10000, culoare: '#4a5a6a', aer: true },
-  haitas:   { nume: 'Hăitașul', desc: 'Pe mistreț, sare peste ziduri drept la apărări.', hp: 270, dps: 60, interval: 1, raza: 0.6, viteza: 1.35, loc: 5, pret: 40, cost: 'sare', timp: 45, tinta: 'aparare', cladire: 'barlog', nivelCladire: 2, max: 5, labBaza: 20000, culoare: '#8a5a3a', sarePesteZid: true },
-  iele:     { nume: 'Ielele', desc: 'Dansează cu securea și lovesc tot ce e în jur.', hp: 750, dps: 94, interval: 1.8, raza: 0.6, viteza: 1.35, loc: 8, pret: 70, cost: 'sare', timp: 90, tinta: 'oricare', cladire: 'barlog', nivelCladire: 3, max: 4, labBaza: 50000, culoare: '#c25a8a', stropire: 0.9, inJur: true },
-  moroi:    { nume: 'Moroiul', desc: 'Uriaș de piatră. Când moare se rupe în doi moroi mici.', hp: 4500, dps: 35, interval: 2.4, raza: 0.6, viteza: 0.68, loc: 30, pret: 450, cost: 'sare', timp: 300, tinta: 'aparare', cladire: 'barlog', nivelCladire: 4, max: 5, labBaza: 60000, culoare: '#7d7466', seRupe: 'moroiMic' },
-  babaCloanta: { nume: 'Baba Cloanța', desc: 'Trezește oseminte care luptă pentru ea.', hp: 300, dps: 100, interval: 0.7, raza: 2.7, viteza: 0.68, loc: 12, pret: 250, cost: 'sare', timp: 120, tinta: 'oricare', cladire: 'barlog', nivelCladire: 5, max: 3, labBaza: 75000, culoare: '#3b2a4a', stropire: 0.3, cheama: 'os' },
+  strigoi:  { nume: 'Strigoi', desc: 'Zboară repede peste ziduri.', hp: 58, dps: 38, interval: 1, raza: 1.8, viteza: 1.8, loc: 2, pret: 6, cost: 'sare', timp: 18, tinta: 'oricare', cladire: 'barlog', nivelCladire: 1, max: 8, labBaza: 10000, culoare: '#4a5a6a', aer: true },
+  haitas:   { nume: 'Hăitașul', desc: 'Pe mistreț, sare peste ziduri drept la apărări.', hp: 270, dps: 60, interval: 1, raza: 0.6, viteza: 1.35, loc: 5, pret: 40, cost: 'sare', timp: 45, tinta: 'aparare', cladire: 'barlog', nivelCladire: 2, max: 8, labBaza: 20000, culoare: '#8a5a3a', sarePesteZid: true },
+  iele:     { nume: 'Ielele', desc: 'Dansează cu securea și lovesc tot ce e în jur.', hp: 750, dps: 94, interval: 1.8, raza: 0.6, viteza: 1.35, loc: 8, pret: 70, cost: 'sare', timp: 90, tinta: 'oricare', cladire: 'barlog', nivelCladire: 3, max: 7, labBaza: 50000, culoare: '#c25a8a', stropire: 0.9, inJur: true },
+  moroi:    { nume: 'Moroiul', desc: 'Uriaș de piatră. Când moare se rupe în doi moroi mici.', hp: 4500, dps: 35, interval: 2.4, raza: 0.6, viteza: 0.68, loc: 30, pret: 450, cost: 'sare', timp: 300, tinta: 'aparare', cladire: 'barlog', nivelCladire: 4, max: 8, labBaza: 60000, culoare: '#7d7466', seRupe: 'moroiMic' },
+  babaCloanta: { nume: 'Baba Cloanța', desc: 'Trezește oseminte care luptă pentru ea.', hp: 300, dps: 100, interval: 0.7, raza: 2.7, viteza: 0.68, loc: 12, pret: 250, cost: 'sare', timp: 120, tinta: 'oricare', cladire: 'barlog', nivelCladire: 5, max: 6, labBaza: 75000, culoare: '#3b2a4a', stropire: 0.3, cheama: 'os' },
   // chemați (nu se antrenează)
   os:       { nume: 'Os', hp: 30, dps: 25, interval: 1, raza: 0.6, viteza: 1.5, loc: 0, tinta: 'oricare', ascuns: true, culoare: '#e8e2d0', max: 1 },
   moroiMic: { nume: 'Moroi mic', hp: 900, dps: 7, interval: 2.4, raza: 0.6, viteza: 0.9, loc: 0, tinta: 'aparare', ascuns: true, culoare: '#9a9182', max: 1 },
 };
-const TINTE = { resurse: ['moara', 'mina', 'minaSare', 'hambar', 'vistierie', 'depozitSare', 'primarie'], aparare: ['tun', 'turn', 'mortier', 'balista', 'turnSolomonar', 'arbaleta', 'turnFoc'] };
+const TINTE = { resurse: ['moara', 'mina', 'minaSare', 'hambar', 'vistierie', 'depozitSare', 'primarie'], aparare: ['tun', 'turn', 'mortier', 'balista', 'turnSolomonar', 'arbaleta', 'turnFoc', 'vultur', 'catapulta'] };
 const OSTENI_ANTRENABILI = Object.keys(OSTENI).filter(k => !OSTENI[k].ascuns);
 const multNivel = n => 1 + 0.15 * (Math.max(1, n) - 1);
 
 // ---------------- vrăji ----------------
 const VRAJI = {
-  fulger:    { nume: 'Fulgerul', desc: 'Lovește din cer o zonă mică.', nivelAtelier: 1, max: 5, pret: 15000, timp: 60, labBaza: 200000, raza: 1.4, dmg: [300, 330, 360, 390, 450], culoare: '#7fb2ff' },
-  vindecare: { nume: 'Vindecarea', desc: 'Vindecă oștenii din cerc timp de 12 secunde.', nivelAtelier: 2, max: 5, pret: 15000, timp: 60, labBaza: 300000, raza: 2.6, durata: 12, vindecaTotal: [600, 800, 1000, 1200, 1400], culoare: '#f2d14b' },
-  furie:     { nume: 'Furia', desc: 'Oștenii din cerc lovesc mai tare și merg mai repede.', nivelAtelier: 3, max: 5, pret: 23000, timp: 90, labBaza: 450000, raza: 2.6, durata: 18, bonus: [1.3, 1.4, 1.5, 1.6, 1.7], culoare: '#c43ad1' },
+  fulger:    { nume: 'Fulgerul', desc: 'Lovește din cer o zonă mică.', nivelAtelier: 1, max: 8, pret: 15000, timp: 60, labBaza: 200000, raza: 1.4, dmg: [300, 330, 360, 390, 450, 510, 570, 630], culoare: '#7fb2ff' },
+  vindecare: { nume: 'Vindecarea', desc: 'Vindecă oștenii din cerc timp de 12 secunde.', nivelAtelier: 2, max: 7, pret: 15000, timp: 60, labBaza: 300000, raza: 2.6, durata: 12, vindecaTotal: [600, 800, 1000, 1200, 1400, 1600, 1800], culoare: '#f2d14b' },
+  furie:     { nume: 'Furia', desc: 'Oștenii din cerc lovesc mai tare și merg mai repede.', nivelAtelier: 3, max: 6, pret: 23000, timp: 90, labBaza: 450000, raza: 2.6, durata: 18, bonus: [1.3, 1.4, 1.5, 1.6, 1.7, 1.8], culoare: '#c43ad1' },
   saritura:  { nume: 'Săritura', desc: 'Oștenii trec peste zidurile din cerc.', nivelAtelier: 4, max: 3, pret: 23000, timp: 90, labBaza: 600000, raza: 2.4, durata: [20, 40, 60], culoare: '#5fd35f' },
-  inghet:    { nume: 'Înghețul', desc: 'Îngheață apărările din cerc câteva secunde.', nivelAtelier: 5, max: 5, pret: 26000, timp: 90, labBaza: 1000000, raza: 2.3, durata: [2.5, 3, 3.5, 4, 4.5], culoare: '#9fe8ff' },
+  inghet:    { nume: 'Înghețul', desc: 'Îngheață apărările din cerc câteva secunde.', nivelAtelier: 5, max: 7, pret: 26000, timp: 90, labBaza: 1000000, raza: 2.3, durata: [2.5, 3, 3.5, 4, 4.5, 5, 5.5], culoare: '#9fe8ff' },
 };
 
 // ---------------- eroi ----------------
 const EROI = {
   voievod: { nume: 'Voievodul', desc: 'Luptător neînfricat. Abilitate: Furia Voievodului — se vindecă, se înfurie și cheamă haiduci.', altar: 'altarVoievod',
-    hp: 1700, dps: 102, interval: 1.2, raza: 0.6, viteza: 0.9, culoare: '#a8322d', maxTH: [0, 0, 0, 0, 0, 0, 5, 10, 15, 20], abilitateDe: 5, cheama: 'haiduc' },
+    hp: 1700, dps: 102, interval: 1.2, raza: 0.6, viteza: 0.9, culoare: '#a8322d', maxTH: [0, 0, 0, 0, 0, 0, 5, 10, 15, 20, 30, 40, 50, 60, 70], abilitateDe: 5, cheama: 'haiduc' },
   domnita: { nume: 'Domnița Arcașă', desc: 'Trage de departe. Abilitate: Vălul Domniței — devine invizibilă, lovește dublu și cheamă arcași.', altar: 'altarDomnita',
-    hp: 725, dps: 136, interval: 0.75, raza: 3.3, viteza: 1.35, culoare: '#6b2a7a', maxTH: [0, 0, 0, 0, 0, 0, 0, 0, 10, 20], abilitateDe: 5, cheama: 'arcas' },
+    hp: 725, dps: 136, interval: 0.75, raza: 3.3, viteza: 1.35, culoare: '#6b2a7a', maxTH: [0, 0, 0, 0, 0, 0, 0, 0, 10, 20, 30, 40, 50, 60, 70], abilitateDe: 5, cheama: 'arcas' },
+  vraci:   { nume: 'Vraciul', desc: 'Vindecă oștenii din jurul lui. Abilitate: Ocrotirea — nimeni din cerc nu poate fi rănit câteva secunde.', altar: 'altarVraci',
+    hp: 1000, dps: 70, interval: 1.8, raza: 2.5, viteza: 0.9, culoare: '#2f6e5a', maxTH: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 30, 40, 50, 55], abilitateDe: 5, aura: 3 },
 };
 const erouHp = (e, n) => Math.round(EROI[e].hp * (1 + 0.05 * (n - 1)));
 const erouDps = (e, n) => Math.round(EROI[e].dps * (1 + 0.04 * (n - 1)));
-const erouPret = (e, n) => (e === 'voievod' ? 5000 + 1500 * n : 10000 + 2000 * n); // n = nivel actual -> n+1
-const erouTimp = n => Math.min(3 * ZI, 6 * ORA * n);
+const erouPret = (e, n) => (e === 'voievod' ? 5000 + 1500 * n : e === 'domnita' ? 10000 + 2000 * n : 20000 + 2500 * n); // n = nivel actual -> n+1
+const erouTimp = n => Math.min(5 * ZI, 6 * ORA * n);
 
 // ---------------- laborator ----------------
-const labTimp = n => [0, 0, 6 * ORA, ZI, 2 * ZI, 3 * ZI, 4 * ZI, 5 * ZI, 6 * ZI][Math.min(8, n)]; // pentru a ajunge la nivelul n
-const labPret = (baza, n) => Math.round(baza * Math.pow(3, n - 2));          // pentru a ajunge la nivelul n
+const labTimp = n => [0, 0, 6 * ORA, ZI, 2 * ZI, 3 * ZI, 4 * ZI, 5 * ZI, 6 * ZI, 7 * ZI, 8 * ZI, 9 * ZI, 10 * ZI, 11 * ZI][Math.min(13, n)]; // pentru a ajunge la nivelul n
+const labPret = (baza, n) => Math.round(baza * Math.pow(3, Math.min(n - 2, 5)) * Math.pow(1.3, Math.max(0, n - 7)) / 100) * 100; // pentru a ajunge la nivelul n
 const nivelMaxLab = (def, nivLab) => Math.min(def.max, nivLab + 1);
 
 // ---------------- ligi ----------------
@@ -306,6 +382,23 @@ const CETATI = [
   { id: 'tgmures',    nume: 'Cetatea Târgu Mureș',      lon: 24.56, lat: 46.55, th: 9 },
   { id: 'targoviste', nume: 'Curtea Domnească Târgoviște', lon: 25.46, lat: 44.93, th: 10 },
 ];
+// Harta Europei: se deblochează după Curtea Domnească Târgoviște. Fiecare țară are 2 cetăți.
+const TARI = [
+  { id: 'md', nume: 'Republica Moldova', scurt: 'Moldova', lon: 28.9, lat: 47.3, steag: ['#0046AE', '#FFD200', '#CC092F'], cetati: [['soroca', 'Cetatea Soroca', 8], ['tighina', 'Cetatea Tighina', 8]] },
+  { id: 'bg', nume: 'Bulgaria', lon: 25.2, lat: 42.7, steag: ['#FFFFFF', '#00966E', '#D62612'], oriz: true, cetati: [['tarevet', 'Țarevețul', 9], ['belogradcik', 'Belogradcik', 9]] },
+  { id: 'rs', nume: 'Serbia', lon: 20.9, lat: 44.0, steag: ['#C6363C', '#0C4076', '#FFFFFF'], oriz: true, cetati: [['kalemegdan', 'Kalemegdan', 9], ['golubac', 'Cetatea Golubac', 10]] },
+  { id: 'hu', nume: 'Ungaria', lon: 19.2, lat: 47.2, steag: ['#CE2939', '#FFFFFF', '#477050'], oriz: true, cetati: [['buda', 'Castelul Buda', 10], ['eger', 'Cetatea Eger', 10]] },
+  { id: 'ua', nume: 'Ucraina', lon: 30.5, lat: 49.3, steag: ['#0057B7', '#0057B7', '#FFD700'], oriz: true, cetati: [['hotin', 'Cetatea Hotin', 11], ['kamianets', 'Kameneț-Podolsk', 11]] },
+  { id: 'gr', nume: 'Grecia', lon: 22.3, lat: 39.4, steag: ['#0D5EAF', '#FFFFFF', '#0D5EAF'], oriz: true, cetati: [['mystras', 'Mystras', 11], ['monemvasia', 'Monemvasia', 12]] },
+  { id: 'tr', nume: 'Turcia', lon: 29.5, lat: 40.6, steag: ['#E30A17', '#E30A17', '#E30A17'], cetati: [['rumeli', 'Rumeli Hisarı', 12], ['yedikule', 'Yedikule', 12]] },
+  { id: 'at', nume: 'Austria', lon: 14.5, lat: 47.6, steag: ['#ED2939', '#FFFFFF', '#ED2939'], oriz: true, cetati: [['salzburg', 'Hohensalzburg', 13], ['kreuzenstein', 'Kreuzenstein', 13]] },
+  { id: 'pl', nume: 'Polonia', lon: 19.4, lat: 52.0, steag: ['#FFFFFF', '#FFFFFF', '#DC143C'], oriz: true, cetati: [['malbork', 'Castelul Malbork', 13], ['wawel', 'Castelul Wawel', 14]] },
+  { id: 'it', nume: 'Italia', lon: 12.6, lat: 42.8, steag: ['#009246', '#FFFFFF', '#CE2B37'], cetati: [['santangelo', 'Castel Sant\'Angelo', 14], ['castelmonte', 'Castel del Monte', 14]] },
+  { id: 'de', nume: 'Germania', lon: 10.4, lat: 51.1, steag: ['#000000', '#DD0000', '#FFCE00'], oriz: true, cetati: [['hohenzollern', 'Castelul Hohenzollern', 15], ['neuschwanstein', 'Neuschwanstein', 15]] },
+  { id: 'fr', nume: 'Franța', lon: 2.5, lat: 46.6, steag: ['#002395', '#FFFFFF', '#ED2939'], cetati: [['carcassonne', 'Cetatea Carcassonne', 15], ['montsaintmichel', 'Mont-Saint-Michel', 15]] },
+];
+const CETATI_EUROPA = TARI.flatMap((t, i) => t.cetati.map(([id, nume, th], j) => ({ id, nume, th, tara: t.id, idx: i * 2 + j })));
+
 const PACHETE = [
   { id: 'mana',    nume: 'Mână de galbeni',   suma: 80 },
   { id: 'punga',   nume: 'Pungă de galbeni',  suma: 500 },

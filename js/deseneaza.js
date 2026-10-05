@@ -207,7 +207,7 @@ function deseneazaCladire(g, T, tip, nivel, x, y, o = {}) {
       g.fillStyle = '#002B7F'; g.fillRect(cx - u * 1.6, Y + u * 3.6, u * 1.07, u * 2.6); g.fillStyle = '#FCD116'; g.fillRect(cx - u * 0.53, Y + u * 3.6, u * 1.07, u * 2.6); g.fillStyle = '#CE1126'; g.fillRect(cx + u * 0.54, Y + u * 3.6, u * 1.07, u * 2.6);
       break;
     }
-    case 'altarVoievod': case 'altarDomnita': {
+    case 'altarVoievod': case 'altarDomnita': case 'altarVraci': {
       g.fillStyle = '#c9b48a'; g.strokeStyle = contur; g.beginPath(); g.arc(cx, cy, S * 0.46, 0, 7); g.fill(); g.stroke();
       g.fillStyle = '#e8dcc0'; g.beginPath(); g.arc(cx, cy, S * 0.3, 0, 7); g.fill(); g.stroke();
       const e = d.erou; if (!o.erouPlecat) deseneazaErou(g, T, e, (px + w / 2) / T, (py + w / 2) / T, { fix: true });
@@ -249,6 +249,25 @@ function deseneazaCladire(g, T, tip, nivel, x, y, o = {}) {
       const fl = 0.8 + Math.sin((o.t || 0) / 120) * 0.15;
       g.fillStyle = '#e8513f'; g.beginPath(); g.arc(cx, cy, S * 0.26 * fl, 0, 7); g.fill();
       g.fillStyle = '#f2c94c'; g.beginPath(); g.arc(cx, cy, S * 0.14 * fl, 0, 7); g.fill();
+      break;
+    }
+    case 'vultur': {
+      g.fillStyle = '#8a8478'; g.strokeStyle = '#3f3a33'; rr(g, X, Y, S, S, u * 1.5); g.fill(); g.stroke();
+      g.fillStyle = '#6b665c'; g.beginPath(); g.arc(cx, cy, S * 0.36, 0, 7); g.fill(); g.stroke();
+      g.save(); g.translate(cx, cy); g.rotate(o.unghi != null ? o.unghi : -0.9);
+      g.fillStyle = '#2b2b2b'; rr(g, -u, -u * 1.3, S * 0.55, u * 2.6, u); g.fill();
+      g.restore();
+      g.fillStyle = '#5a3a1c'; poli(g, [cx - u * 2.6, cy - u * 0.4, cx, cy - u * 1.6, cx + u * 2.6, cy - u * 0.4, cx, cy + u * 0.4]); g.fill();
+      g.fillStyle = '#f2f0e0'; g.beginPath(); g.arc(cx, cy - u * 1.6, u * 0.7, 0, 7); g.fill();
+      g.fillStyle = '#f2c94c'; poli(g, [cx + u * 0.5, cy - u * 1.6, cx + u * 1.4, cy - u * 1.3, cx + u * 0.5, cy - u * 1.2]); g.fill();
+      break;
+    }
+    case 'catapulta': {
+      g.fillStyle = '#7b5b3a'; g.strokeStyle = contur; rr(g, X + u, Y + u * 2, S - u * 2, S - u * 3, u); g.fill(); g.stroke();
+      g.fillStyle = '#3a2a1a'; for (const a of [0.25, 0.75]) for (const b of [0.35, 0.85]) { g.beginPath(); g.arc(X + S * a, Y + S * b, u * 0.9, 0, 7); g.fill(); }
+      g.save(); g.translate(cx, cy + u); g.rotate(-0.9 + Math.sin((o.t || 0) / 500) * 0.1);
+      g.strokeStyle = '#5a3a1c'; g.lineWidth = lw * 2; g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -S * 0.45); g.stroke();
+      g.fillStyle = '#8a8478'; g.beginPath(); g.arc(0, -S * 0.45, u * 1.1, 0, 7); g.fill(); g.restore(); g.lineWidth = lw;
       break;
     }
     case 'capcanaPulbere': case 'bombaMare': {
@@ -307,7 +326,7 @@ function deseneazaCladire(g, T, tip, nivel, x, y, o = {}) {
 
 function deseneazaOsten(g, T, tip, x, y, o = {}) {
   const d = OSTENI[tip]; const px = x * T, py = y * T;
-  const marimi = { pandur: 0.42, calaret: 0.38, aerostat: 0.42, zana: 0.36, zmeu: 0.55, capcaun: 0.5, haitas: 0.4, iele: 0.38, moroi: 0.6, moroiMic: 0.42, babaCloanta: 0.36, os: 0.22, strigoi: 0.26 };
+  const marimi = { ortac: 0.32, balaur: 0.6, pandur: 0.42, calaret: 0.38, aerostat: 0.42, zana: 0.36, zmeu: 0.55, capcaun: 0.5, haitas: 0.4, iele: 0.38, moroi: 0.6, moroiMic: 0.42, babaCloanta: 0.36, os: 0.22, strigoi: 0.26 };
   const r = T * (marimi[tip] || 0.3);
   const zbor = d.aer ? T * 0.45 : 0;
   g.save(); g.translate(px, py);
@@ -332,6 +351,15 @@ function deseneazaOsten(g, T, tip, x, y, o = {}) {
       g.beginPath(); g.moveTo(-r * 0.2, 0); g.lineTo(-r * 0.6, -r * 1.3); g.lineTo(r * 0.3, -r * 0.2); g.lineTo(-r * 0.6, r * 1.3); g.closePath(); g.fill(); g.stroke();
       g.restore(); cerc(r * 0.6, d.culoare);
       if (tip === 'zmeu') { g.fillStyle = '#f2c94c'; g.beginPath(); g.arc(Math.cos(o.dir || 0) * r * 0.5, Math.sin(o.dir || 0) * r * 0.5, r * 0.2, 0, 7); g.fill(); }
+      break; }
+    case 'ortac':
+      if (o.subteran) { g.fillStyle = '#6b5a48'; g.beginPath(); g.ellipse(0, r * 0.4, r * 1.1, r * 0.5, 0, 0, 7); g.fill(); g.fillStyle = '#8a7660'; g.beginPath(); g.arc(-r * 0.5, r * 0.2, r * 0.25, 0, 7); g.arc(r * 0.4, r * 0.3, r * 0.2, 0, 7); g.fill(); break; }
+      cerc(r, d.culoare); g.fillStyle = '#f2c94c'; g.fillRect(-r * 0.6, -r * 1.05, r * 1.2, r * 0.4); g.fillStyle = '#fff'; g.beginPath(); g.arc(0, -r * 0.85, r * 0.15, 0, 7); g.fill(); break;
+    case 'balaur': {
+      g.save(); g.rotate(o.dir || 0); g.fillStyle = '#2a3f6a';
+      g.beginPath(); g.moveTo(-r * 0.2, 0); g.lineTo(-r * 0.7, -r * 1.4); g.lineTo(r * 0.3, -r * 0.2); g.lineTo(-r * 0.7, r * 1.4); g.closePath(); g.fill(); g.stroke();
+      g.restore(); cerc(r * 0.6, d.culoare);
+      g.fillStyle = '#9fe8ff'; for (let i = -1; i <= 1; i++) { const a = (o.dir || 0) + i * 0.5; g.beginPath(); g.arc(Math.cos(a) * r * 0.75, Math.sin(a) * r * 0.75, r * 0.2, 0, 7); g.fill(); }
       break; }
     case 'moroi': case 'moroiMic':
       g.fillStyle = d.culoare; rr(g, -r, -r, r * 2, r * 2, r * 0.5); g.fill(); g.stroke();
@@ -364,7 +392,8 @@ function deseneazaErou(g, T, e, x, y, o = {}) {
   g.lineWidth = Math.max(1.5, T * 0.09); g.strokeStyle = o.inamic ? '#e23b2e' : '#FCD116';
   g.fillStyle = d.culoare; g.beginPath(); g.arc(0, 0, r, 0, 7); g.fill(); g.stroke();
   g.fillStyle = '#FCD116'; poli(g, [-r * 0.6, -r * 0.6, -r * 0.6, -r * 1.15, -r * 0.3, -r * 0.85, 0, -r * 1.25, r * 0.3, -r * 0.85, r * 0.6, -r * 1.15, r * 0.6, -r * 0.6]); g.fill();
-  if (e === 'domnita') { g.strokeStyle = '#e8d29a'; g.beginPath(); g.arc(0, 0, r * 0.65, (o.dir || 0) - 1.2, (o.dir || 0) + 1.2); g.stroke(); }
+  if (e === 'vraci') { g.strokeStyle = '#e8d29a'; g.beginPath(); g.moveTo(-r * 0.8, r * 0.9); g.lineTo(-r * 0.6, -r * 1.2); g.stroke(); g.fillStyle = '#9fe8a6'; g.beginPath(); g.arc(-r * 0.6, -r * 1.3, r * 0.25, 0, 7); g.fill(); }
+  else if (e === 'domnita') { g.strokeStyle = '#e8d29a'; g.beginPath(); g.arc(0, 0, r * 0.65, (o.dir || 0) - 1.2, (o.dir || 0) + 1.2); g.stroke(); }
   else { g.strokeStyle = '#d9dde0'; g.beginPath(); g.moveTo(r * 0.2, r * 0.2); g.lineTo(r * 1.1, -r * 0.6); g.stroke(); }
   g.restore();
   if (o.viata != null && o.viata < 1) {

@@ -287,3 +287,12 @@ input:focus, select:focus { outline: none; border-color: var(--albastru); }
 
 .clan-rand small { display: block; }
 .rand-cet .clan-rand { flex: 1; min-width: 0; }
+
+/* ---------- v3 ---------- */
+#strange-tot { min-height: 28px; padding: 3px 10px; font-size: 12px; flex-direction: row; gap: 4px; }
+.eticheta { display: inline-block; background: #fffaf0; border: 1px solid #c9b088; border-radius: 8px; padding: 2px 7px; margin: 2px; font-size: 13px; font-weight: 700; }
+.multi-b { margin-top: 6px; flex-wrap: wrap; }
+.multi-b .btn { flex: 1 1 auto; }
+#foaie.multi { max-height: 46vh; }
+h3.tara { margin-top: 14px; }
+.h-nume.mic { font-size: 20px; stroke-width: 5px; }

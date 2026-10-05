@@ -144,13 +144,19 @@ const Lupta = (() => {
     for (const c of el('l-osteni').querySelectorAll('canvas')) deseneazaMini(c, c.dataset.mini, c.dataset.fel === 'cladire' ? false : c.dataset.fel === 'osten' ? true : c.dataset.fel);
   }
 
-  function permis(x, y) {
-    if (x < 0 || y < 0 || x >= GRID || y >= GRID) return false;
+  function refaMasca() {
+    const m = L.masca || (L.masca = new Uint8Array(GRID * GRID)); m.fill(0);
     for (const b of L.cladiri) {
       if (b.dead) continue;
-      if (x >= b.x - 1 && x < b.x + b.size + 1 && y >= b.y - 1 && y < b.y + b.size + 1) return false;
+      for (let y = Math.max(0, b.y - 1); y < Math.min(GRID, b.y + b.size + 1); y++)
+        for (let x = Math.max(0, b.x - 1); x < Math.min(GRID, b.x + b.size + 1); x++) m[y * GRID + x] = 1;
     }
-    return true;
+    L.mascaVeche = false;
+  }
+  function permis(x, y) {
+    if (x < 0 || y < 0 || x >= GRID || y >= GRID) return false;
+    if (!L.masca || L.mascaVeche) refaMasca();
+    return !L.masca[Math.floor(y) * GRID + Math.floor(x)];
   }
   function spune(m) { L.mesaj = m; L.mesajT = 1.6; }
   function incepe() {
@@ -171,15 +177,15 @@ const Lupta = (() => {
     if (fel === 't') {
       if (!(L.rest[tip] > 0)) { spune(`Nu mai ai ${OSTENI[tip].nume}`); return; }
       L.unitati.push(unitate(tip, x + (Math.random() - 0.5) * 0.3, y + (Math.random() - 0.5) * 0.3, Joc.nivelOsten(tip), false));
-      L.rest[tip]--; Joc.consumaOsten(tip);
+      L.rest[tip]--; Joc.consumaOsten(tip); L.locTrimis = (L.locTrimis || 0) + OSTENI[tip].loc;
       if (!(L.rest[tip] > 0)) L.sel = primaSelectie();
     } else if (fel === 'e') {
       const e = L.eroi.find(z => z.e === tip); if (!e || L.eroiTrimisi[tip]) return;
-      const u = unitate('erou:' + tip, x, y, e.nivel, false, { erou: tip }); L.unitati.push(u); L.eroiTrimisi[tip] = u.id; L.apasat = null;
+      const u = unitate('erou:' + tip, x, y, e.nivel, false, { erou: tip }); L.unitati.push(u); L.eroiTrimisi[tip] = u.id; L.apasat = null; L.locTrimis = (L.locTrimis || 0) + 25;
       L.sel = primaSelectie();
     } else if (fel === 'c') {
       if (L.cetateTrimisa) return;
-      L.cetate.forEach((t, i) => L.unitati.push(unitate(t.tip, x + Math.cos(i) * 0.4, y + Math.sin(i) * 0.4, t.nivel, false)));
+      L.cetate.forEach((t, i) => { L.unitati.push(unitate(t.tip, x + Math.cos(i) * 0.4, y + Math.sin(i) * 0.4, t.nivel, false)); L.locTrimis = (L.locTrimis || 0) + OSTENI[t.tip].loc; });
       L.cetateTrimisa = true; L.folositCetate = true; L.apasat = null; L.sel = primaSelectie();
     }
     incepe(); randeazaPaleta();
@@ -211,8 +217,9 @@ const Lupta = (() => {
     if (!u || u.dead || u.abFolosita || niv < EROI[e].abilitateDe) return;
     u.abFolosita = true; const k = 2 + Math.floor(niv / 5) * 2;
     if (e === 'voievod') { u.hp = Math.min(u.max, u.hp + u.max * 0.35); u.bonusPana = L.t + 10; u.bonusMult = 1.6; spune('Furia Voievodului!'); }
+    else if (e === 'vraci') { const dur = 3 + Math.floor(niv / 10) * 0.5; for (const o of L.unitati) if (!o.dead && dist(o.x, o.y, u.x, u.y) <= 3.5) o.invulnPana = L.t + dur; spune('Ocrotirea Vraciului!'); L.efecte.push({ x: u.x, y: u.y, t: 0, dur: dur, r: 3.5, cul: '#9fe8a6', cerc: true }); }
     else { u.invizibilPana = L.t + 4; u.bonusPana = L.t + 4; u.bonusMult = 2.5; spune('Vălul Domniței!'); }
-    for (let i = 0; i < k; i++) L.unitati.push(unitate(EROI[e].cheama, u.x + Math.cos(i * 1.3) * 0.7, u.y + Math.sin(i * 1.3) * 0.7, Joc.nivelOsten(EROI[e].cheama), false));
+    if (EROI[e].cheama) for (let i = 0; i < k; i++) L.unitati.push(unitate(EROI[e].cheama, u.x + Math.cos(i * 1.3) * 0.7, u.y + Math.sin(i * 1.3) * 0.7, Joc.nivelOsten(EROI[e].cheama), false));
     L.efecte.push({ x: u.x, y: u.y, t: 0, dur: 0.8, r: 1.6, cul: '#FCD116', cerc: true });
     randeazaPaleta();
   }
@@ -242,7 +249,7 @@ const Lupta = (() => {
     if (b.dead) return;
     b.hp -= dmg;
     if (b.hp <= 0) {
-      b.dead = true; b.hp = 0;
+      b.dead = true; b.hp = 0; L.mascaVeche = true;
       L.efecte.push({ x: b.x + b.size / 2, y: b.y + b.size / 2, t: 0, dur: 0.7, r: b.size * 0.7 });
       if (b.tip !== 'zid') {
         L.distruse++; L.procent = Math.floor(L.distruse / L.total * 100);
@@ -258,7 +265,7 @@ const Lupta = (() => {
     }
   }
   function lovesteUnitate(u, dmg) {
-    if (u.dead) return;
+    if (u.dead || u.invulnPana > L.t) return;
     u.hp -= dmg;
     if (u.hp <= 0) moare(u);
   }
@@ -278,6 +285,7 @@ const Lupta = (() => {
     const viteza = d.viteza * (furie ? 1.3 : 1);
     const vind = inVraja('vindecare', u.x, u.y);
     if (vind && !u.aer) u.hp = Math.min(u.max, u.hp + VRAJI.vindecare.vindecaTotal[vind.n - 1] / VRAJI.vindecare.durata * dt);
+    if (d.aura) { const vind2 = u.dmg / d.interval * 0.4 * dt; for (const o of (u.inamic ? L.aparatori : L.unitati)) if (!o.dead && o !== u && dist(o.x, o.y, u.x, u.y) <= d.aura) o.hp = Math.min(o.max, o.hp + vind2); }
 
     // zâna: vindecă oștenii de pe pământ
     if (d.vindecator) {
@@ -301,7 +309,7 @@ const Lupta = (() => {
     const adversari = u.inamic ? L.unitati : L.aparatori;
     let bu = null, bud = 1e9;
     for (const a of adversari) {
-      if (a.dead || (a.invizibilPana > L.t)) continue;
+      if (a.dead || (a.invizibilPana > L.t) || (a.d.subteran && a.inMers)) continue;
       if (a.aer && !u.aer && d.raza < 1 && !u.inamic) continue;
       if (a.aer && !u.aer && d.raza < 1) continue;
       const dd = dist(u.x, u.y, a.x, a.y); if (dd < bud) { bud = dd; bu = a; }
@@ -321,6 +329,7 @@ const Lupta = (() => {
     const tx = esteUnitate ? tinta.x : tinta.x + tinta.size / 2, ty = esteUnitate ? tinta.y : tinta.y + tinta.size / 2;
     const dd = esteUnitate ? dist(u.x, u.y, tinta.x, tinta.y) : distRect(u.x, u.y, tinta);
     if (dd <= d.raza + (esteUnitate ? 0.3 : 0)) {
+      u.inMers = false;
       u.dir = Math.atan2(ty - u.y, tx - u.x);
       u.cd -= dt;
       if (u.cd <= 0) {
@@ -331,6 +340,15 @@ const Lupta = (() => {
           else lovesteUnitate(tinta, dmg);
         } else if (d.kamikaze) {
           lovesteZonaCladiri(u.x, u.y, d.stropire, dmg * d.kamikaze, true); L.efecte.push({ x: u.x, y: u.y, t: 0, dur: 0.5, r: d.stropire }); moare(u);
+        } else if (d.lant) {
+          let tinte = [tinta], cur = tinta, k = 1;
+          loveste(tinta, dmg);
+          for (let i = 1; i < d.lant; i++) {
+            let nb = null, nd = 3; const [cx, cy] = [cur.x + cur.size / 2, cur.y + cur.size / 2];
+            for (const b of L.cladiri) { if (b.dead || tinte.includes(b) || b.tip === 'zid') continue; const dd2 = distRect(cx, cy, b); if (dd2 < nd) { nd = dd2; nb = b; } }
+            if (!nb) break; k *= 0.8; L.proiectile.push({ x1: cx, y1: cy, x2: nb.x + nb.size / 2, y2: nb.y + nb.size / 2, t: 0, dur: 0.3, tip: 'raza', cul: '#9fe8ff' });
+            loveste(nb, dmg * k); tinte.push(nb); cur = nb;
+          }
         } else if (d.stropire) {
           const [sx, sy] = d.inJur ? [u.x, u.y] : [tx, ty];
           lovesteZonaCladiri(sx, sy, d.stropire + (d.inJur ? 0 : 0), dmg, false);
@@ -349,7 +367,8 @@ const Lupta = (() => {
     const step = Math.min(len, pas);
     const nx = u.x + dx / len * step, ny = u.y + dy / len * step;
     u.dir = Math.atan2(dy, dx);
-    if (!liber && !u.aer && !u.inamic && !u.d.sarePesteZid && !inVraja('saritura', u.x, u.y)) {
+    u.inMers = true;
+    if (!liber && !u.aer && !u.inamic && !u.d.sarePesteZid && !u.d.subteran && !inVraja('saritura', u.x, u.y)) {
       const tx = Math.floor(nx), ty = Math.floor(ny);
       const z = L.zidLa.get(ty * GRID + tx);
       if (z && !z.dead && z !== tinta && !(Math.floor(u.x) === tx && Math.floor(u.y) === ty)) { u.zid = z; return; }
@@ -360,11 +379,13 @@ const Lupta = (() => {
   function pasAparare(b, dt) {
     const d = CLADIRI[b.tip];
     if (b.ingheata > L.t) return;
+    if (d.activare && (L.locTrimis || 0) < d.activare) return;
+    if (d.activare && !b.trezit) { b.trezit = true; spune(d.nume + ' s-a trezit!'); }
     b.cd -= dt; if (b.cd > 0) return;
     const [cx, cy] = centru(b);
     let best = null, bd = d.raza;
     for (const u of L.unitati) {
-      if (u.dead || u.invizibilPana > L.t) continue;
+      if (u.dead || u.invizibilPana > L.t || (u.d.subteran && u.inMers)) continue;
       if (d.tinte === 'sol' && u.aer) continue;
       if (d.tinte === 'aer' && !u.aer) continue;
       const dd = Math.hypot(u.x - cx, u.y - cy);
@@ -379,7 +400,7 @@ const Lupta = (() => {
       const k = Math.min(1, b.focT / 5); dmg = (d.dps[b.nivel - 1] + (d.dpsMax[b.nivel - 1] - d.dps[b.nivel - 1]) * k) * d.interval;
       L.proiectile.push({ x1: cx, y1: cy, x2: best.x, y2: best.y - (best.aer ? 0.45 : 0), t: 0, dur: d.interval, tip: 'raza' });
     } else {
-      L.proiectile.push({ x1: cx, y1: cy, x2: best.x, y2: best.y - (best.aer ? 0.45 : 0), t: 0, dur: b.tip === 'mortier' ? 0.9 : 0.22, tip: b.tip === 'tun' || b.tip === 'mortier' ? 'ghiulea' : b.tip === 'turnSolomonar' ? 'foc' : 'sageata' });
+      L.proiectile.push({ x1: cx, y1: cy, x2: best.x, y2: best.y - (best.aer ? 0.45 : 0), t: 0, dur: ['mortier', 'vultur', 'catapulta'].includes(b.tip) ? 0.9 : 0.22, tip: ['tun', 'mortier', 'vultur', 'catapulta'].includes(b.tip) ? 'ghiulea' : b.tip === 'turnSolomonar' ? 'foc' : 'sageata' });
     }
     if (d.stropire) {
       for (const u of L.unitati) {
@@ -394,7 +415,7 @@ const Lupta = (() => {
     for (const c of L.capcane) {
       if (c.folosita) continue;
       const d = CLADIRI[c.tip]; const cx = c.x + 0.5, cy = c.y + 0.5;
-      const declansata = L.unitati.some(u => !u.dead && (d.tinte === 'aer' ? u.aer : !u.aer) && dist(u.x, u.y, cx, cy) <= d.declansare);
+      const declansata = L.unitati.some(u => !u.dead && !(u.d.subteran && u.inMers) && (d.tinte === 'aer' ? u.aer : !u.aer) && dist(u.x, u.y, cx, cy) <= d.declansare);
       if (!declansata) continue;
       c.folosita = true;
       if (c.tip === 'tepi') {
@@ -457,7 +478,8 @@ const Lupta = (() => {
     if (!L.terminat) {
       const a = 0.12 + Math.max(0, L.flash) * 0.3;
       g.fillStyle = `rgba(206,17,38,${a})`;
-      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) if (!permis(x + 0.5, y + 0.5)) g.fillRect(x * T, y * T, T + 0.5, T + 0.5);
+      if (!L.masca || L.mascaVeche) refaMasca();
+      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) if (L.masca[y * GRID + x]) g.fillRect(x * T, y * T, T + 0.5, T + 0.5);
     }
     for (const v of L.vraji) {
       g.fillStyle = v.cul + '33'; g.strokeStyle = v.cul; g.lineWidth = 2;
@@ -472,11 +494,13 @@ const Lupta = (() => {
     const toti = L.unitati.concat(L.aparatori).filter(u => !u.dead).sort((a, b) => (a.aer - b.aer) || (a.y - b.y));
     for (const u of toti) {
       const o = { dir: u.dir, lovit: u.lovit > 0, viata: u.hp / u.max, inamic: u.inamic, invizibil: u.invizibilPana > L.t, t };
+      o.subteran = u.d.subteran && u.inMers;
+      if (u.invulnPana > L.t) { g.strokeStyle = 'rgba(159,232,166,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(u.x * T, u.y * T, T * 0.55, 0, 7); g.stroke(); }
       if (u.erou) deseneazaErou(g, T, u.erou, u.x, u.y, o); else deseneazaOsten(g, T, u.tip, u.x, u.y, o);
     }
     for (const p of L.proiectile) {
       const k = Math.min(1, p.t / p.dur), x = (p.x1 + (p.x2 - p.x1) * k) * T, y = (p.y1 + (p.y2 - p.y1) * k) * T;
-      if (p.tip === 'raza') { g.strokeStyle = 'rgba(255,120,40,.85)'; g.lineWidth = Math.max(2, T * 0.18); g.beginPath(); g.moveTo(p.x1 * T, p.y1 * T); g.lineTo(p.x2 * T, p.y2 * T); g.stroke(); }
+      if (p.tip === 'raza') { g.strokeStyle = p.cul || 'rgba(255,120,40,.85)'; g.lineWidth = Math.max(2, T * 0.18); g.beginPath(); g.moveTo(p.x1 * T, p.y1 * T); g.lineTo(p.x2 * T, p.y2 * T); g.stroke(); }
       else if (p.tip === 'ghiulea') { g.fillStyle = '#1b1b1b'; g.beginPath(); g.arc(x, y - Math.sin(k * Math.PI) * T * 1.2, T * 0.2, 0, 7); g.fill(); }
       else if (p.tip === 'foc') { g.fillStyle = '#f2a03a'; g.beginPath(); g.arc(x, y, T * 0.22, 0, 7); g.fill(); }
       else { const a = Math.atan2(p.y2 - p.y1, p.x2 - p.x1); g.strokeStyle = '#f5ecd2'; g.lineWidth = Math.max(1, T * 0.08); g.beginPath(); g.moveTo(x, y); g.lineTo(x - Math.cos(a) * T * 0.5, y - Math.sin(a) * T * 0.5); g.stroke(); }

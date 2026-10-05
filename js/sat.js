@@ -111,8 +111,8 @@ function stareInitiala() {
   const t = acum(); let id = 1;
   const c = (tip, x, y) => ({ id: id++, tip, nivel: 1, x, y, upg: null, acc: 0, last: t });
   return {
-    v: 2, res: { lei: 1000, grau: 1000, sare: 0 }, mesteri: 2,
-    cladiri: [c('primarie', 13, 13), c('moara', 8, 8), c('mina', 20, 8), c('hambar', 8, 20), c('vistierie', 20, 20), c('cazarma', 8, 13), c('tabara', 17, 9), c('tun', 17, 14)],
+    v: 3, res: { lei: 1000, grau: 1000, sare: 0 }, mesteri: 2,
+    cladiri: [c('primarie', 18, 18), c('moara', 13, 13), c('mina', 25, 13), c('hambar', 13, 25), c('vistierie', 25, 25), c('cazarma', 13, 18), c('tabara', 22, 14), c('tun', 22, 19)],
     armata: { haiduc: 15 }, coada: [], vraji: {}, coadaVraji: [], lab: {}, labUpg: null, eroi: {},
     campanie: {}, jurnal: [], nextId: id,
   };
@@ -120,7 +120,19 @@ function stareInitiala() {
 
 // trecerea salvărilor vechi (harta 20x20) la v2 (harta 30x30, tabere, sare, laborator)
 function migreaza(s) {
-  if ((s.v | 0) >= 2) return s;
+  if ((s.v | 0) < 2) migreazaV2(s);
+  if ((s.v | 0) < 3) {
+    for (const c of s.cladiri) { c.x += 5; c.y += 5; }
+    s.v = 3;
+    setTimeout(() => anunta('Satul a crescut iar!', `<ul class="lista-simpla">
+      <li>Primăria merge acum până la <b>nivelul 15</b>, iar satul are 40×40.</li>
+      <li>Nou: <b>Vulturul Carpaților</b>, <b>Catapulta</b>, eroul <b>Vraciul</b>, oștenii <b>Ortacul</b> și <b>Balaurul</b>.</li>
+      <li><b>Harta Europei</b>: 12 țări și 24 de cetăți (din Atacă → Europa).</li>
+      <li>Ziduri în linie (trage cu degetul), îmbunătățire multiplă și butonul <b>Strânge tot</b>.</li></ul>`), 700);
+  }
+  return s;
+}
+function migreazaV2(s) {
   for (const c of s.cladiri) { c.x += 5; c.y += 5; }
   s.res.sare = 0; s.vraji = {}; s.coadaVraji = []; s.lab = {}; s.labUpg = null; s.eroi = {};
   const caz = s.cladiri.find(c => c.tip === 'cazarma');
@@ -133,7 +145,7 @@ function migreaza(s) {
     s.cladiri.push({ id: s.nextId++, tip: 'tabara', nivel: niv, x: p.x, y: p.y, upg: null, acc: 0, last: acum() });
   }
   s.v = 2;
-  setTimeout(() => anunta('Jocul s-a mărit!', `<ul class="lista-simpla">
+  if (0) setTimeout(() => anunta('Jocul s-a mărit!', `<ul class="lista-simpla">
     <li>Primăria merge acum până la <b>nivelul 10</b>, iar satul e mai mare (30×30, cu zoom din două degete).</li>
     <li>Ai primit <b>tabere</b> pentru armată, la fel de mare ca înainte.</li>
     <li>Nou: Laborator, vrăji, mortier, balistă, capcane, Turnul Solomonarului, eroi, sare și <b>clanuri</b> cu războaie.</li>
@@ -150,7 +162,7 @@ function repara(s) {
   s.cladiri = (s.cladiri || []).filter(c => CLADIRI[c.tip]);
   s.nextId = Math.max(s.nextId | 0, ...s.cladiri.map(c => c.id + 1), 1);
   for (const c of s.cladiri) { if (c.acc == null) c.acc = 0; if (!c.last) c.last = acum(); c.nivel = Math.min(c.nivel | 0, CLADIRI[c.tip].max); }
-  if (!s.cladiri.some(c => c.tip === 'primarie')) s.cladiri.push({ id: s.nextId++, tip: 'primarie', nivel: 1, x: 13, y: 13, upg: null, acc: 0, last: acum() });
+  if (!s.cladiri.some(c => c.tip === 'primarie')) s.cladiri.push({ id: s.nextId++, tip: 'primarie', nivel: 1, x: 18, y: 18, upg: null, acc: 0, last: acum() });
   return s;
 }
 
@@ -291,6 +303,7 @@ function bunVenit() {
 
 function tick() {
   if (!S) return; proceseazaTimp(); actualizeazaBara();
+  $('#strange-tot').hidden = !ceVaStrange();
   for (const e of $$('[data-pana]')) e.textContent = fmtTimp((+e.dataset.pana - acum()) / 1000);
   for (const e of $$('[data-acum]')) { const c = gaseste(+e.dataset.acum); if (c) e.textContent = fmt(acumulat(c)); }
   for (const e of $$('[data-galbeni-pana]')) e.textContent = galbeniPentruTimp((+e.dataset.galbeniPana - acum()) / 1000);
@@ -345,7 +358,7 @@ function deseneazaSat(t) {
   const lista = S.cladiri.slice().sort((a, b) => (def(a.tip).size - def(b.tip).size === 0 ? 0 : (def(a.tip).capcana ? -1 : def(b.tip).capcana ? 1 : 0)) || ((a.y + def(a.tip).size) - (b.y + def(b.tip).size)));
   for (const c of lista) {
     if (plasare && plasare.mutaId === c.id) continue;
-    const o = { t, sel: selectat === c.id };
+    const o = { t, sel: selectat === c.id || (multi && multi.has(c.id)) };
     if (c.upg) { const tot = def(c.tip).timp[c.upg.la - 1] * 1000 || 1; o.constructie = true; o.progres = 1 - (c.upg.pana - acum()) / tot; }
     const d = def(c.tip);
     if (d.erou) { const e = S.eroi[d.erou]; o.erouPlecat = !e || e.upg; }
@@ -360,7 +373,12 @@ function deseneazaSat(t) {
       }
     }
   }
-  if (plasare) {
+  if (plasare && plasare.linie) {
+    for (const p of plasare.linie) {
+      const ok = p.ok; g.fillStyle = ok ? 'rgba(80,220,90,.35)' : 'rgba(230,40,40,.4)'; g.fillRect(p.x * T, p.y * T, T, T);
+      if (ok) { g.globalAlpha = 0.85; deseneazaCladire(g, T, 'zid', 1, p.x, p.y, { t }); g.globalAlpha = 1; }
+    }
+  } else if (plasare) {
     const d = def(plasare.tip), ok = locValid(plasare.x, plasare.y, d.size, plasare.mutaId);
     g.fillStyle = ok ? 'rgba(80,220,90,.35)' : 'rgba(230,40,40,.4)';
     g.fillRect(plasare.x * T, plasare.y * T, d.size * T, d.size * T);
@@ -405,7 +423,7 @@ cv.addEventListener('pointerdown', e => {
   if (degete.size === 2) {
     const [a, b] = [...degete.values()];
     ciupire = { d: Math.hypot(a.x - b.x, a.y - b.y), s: cam.s, ox: cam.ox, oy: cam.oy, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 }; apasare = null;
-  } else if (degete.size === 1) apasare = { sx: e.offsetX, sy: e.offsetY, ox: cam.ox, oy: cam.oy, mutat: false };
+  } else if (degete.size === 1) apasare = { sx: e.offsetX, sy: e.offsetY, ox: cam.ox, oy: cam.oy, mutat: false, t0: laTile(e.offsetX, e.offsetY) };
 });
 cv.addEventListener('pointermove', e => {
   if (!degete.has(e.pointerId)) return;
@@ -421,7 +439,8 @@ cv.addEventListener('pointermove', e => {
   const dx = e.offsetX - apasare.sx, dy = e.offsetY - apasare.sy;
   if (Math.hypot(dx, dy) > 8) apasare.mutat = true;
   if (!apasare.mutat) return;
-  if (plasare) { const p = laTile(e.offsetX, e.offsetY); seteazaGhost(p.x, p.y); }
+  if (plasare && plasare.tip === 'zid' && !plasare.mutaId) { const p = laTile(e.offsetX, e.offsetY); seteazaLinie(apasare.t0, p); }
+  else if (plasare) { const p = laTile(e.offsetX, e.offsetY); seteazaGhost(p.x, p.y); }
   else { cam.ox = apasare.ox + dx; cam.oy = apasare.oy + dy; limiteazaCam(); }
 });
 function ridica(e) {
@@ -429,8 +448,8 @@ function ridica(e) {
   if (ciupire) { if (degete.size < 2) ciupire = null; apasare = null; return; }
   if (!apasare) return;
   const p = laTile(e.offsetX, e.offsetY); const mutat = apasare.mutat; apasare = null;
-  if (plasare) { if (!mutat) seteazaGhost(p.x, p.y); return; }
-  if (!mutat) atinge(p.x, p.y);
+  if (plasare) { if (!mutat) { plasare.linie = null; seteazaGhost(p.x, p.y); arataPlasare(); } return; }
+  if (!mutat) { if (multi) comutaMulti(p.x, p.y); else atinge(p.x, p.y); }
 }
 cv.addEventListener('pointerup', ridica);
 cv.addEventListener('pointercancel', e => { degete.delete(e.pointerId); apasare = null; ciupire = null; });
@@ -444,6 +463,81 @@ function atinge(x, y) {
   if (!c) { selectat = null; inchideFoaie(); return; }
   if (def(c.tip).prod && c.nivel > 0) colecteaza(c, true);
   selectat = c.id; deschideCladire(c);
+}
+
+// ---------- selecție multiplă ----------
+let multi = null;
+function startMulti(ids) { multi = new Set(ids); selectat = null; deschideMulti(); }
+function comutaMulti(x, y) {
+  const c = cladireLa(Math.floor(x), Math.floor(y)); if (!c) return;
+  if (multi.has(c.id)) multi.delete(c.id); else multi.add(c.id);
+  deschideMulti();
+}
+function randZid(c) {
+  const la = (x, y) => S.cladiri.find(z => z.tip === 'zid' && z.x === x && z.y === y && z.nivel === c.nivel && !z.upg);
+  const ids = new Set([c.id]);
+  for (const [dx, dy] of [[1, 0], [0, 1]]) {
+    const linie = [c.id];
+    for (const sg of [1, -1]) { let x = c.x + dx * sg, y = c.y + dy * sg, z; while ((z = la(x, y))) { linie.push(z.id); x += dx * sg; y += dy * sg; } }
+    if (linie.length > 1) linie.forEach(i => ids.add(i));
+  }
+  return [...ids];
+}
+function costMulti() {
+  const tot = { lei: 0, grau: 0, sare: 0 }; let n = 0, timp = 0;
+  for (const id of multi) {
+    const c = gaseste(id); if (!c || c.upg) continue; const d = def(c.tip);
+    if (c.nivel >= d.max || c.nivel + 1 > nivelMaxPermis(c.tip)) continue;
+    tot[d.cost] += d.pret[c.nivel]; n++; if (d.timp[c.nivel] > 0) timp++;
+  }
+  return { tot, n, timp };
+}
+function deschideMulti() {
+  foaie = { tip: 'multi' };
+  const grupe = {};
+  for (const id of multi) { const c = gaseste(id); if (!c) continue; const k = def(c.tip).nume + ' nv ' + c.nivel; grupe[k] = (grupe[k] || 0) + 1; }
+  const { tot, n, timp } = costMulti();
+  const costTxt = ['lei', 'grau', 'sare'].filter(r => tot[r]).map(r => cost(r, tot[r])).join(' ') || '—';
+  const liberi = S.mesteri - mesteriOcupati();
+  deschideFoaie(`Selectate: ${multi.size}`, `<p class="nota">Atinge clădiri pe hartă ca să le adaugi sau să le scoți din selecție.</p>
+    <p>${Object.entries(grupe).map(([k, v]) => `<span class="eticheta">${k} ×${v}</span>`).join(' ') || '<span class="nota">Nimic selectat.</span>'}</p>
+    <div class="statistici">${stat('Se pot îmbunătăți', n)}${stat('Cost total', costTxt)}${stat('Au nevoie de meșter', timp)}${stat('Meșteri liberi', liberi)}</div>
+    ${timp > liberi ? `<p class="nota">Doar ${liberi} lucrări pot începe acum (zidurile și capcanele se fac pe loc). Restul rămân selectate.</p>` : ''}
+    <button class="btn mare verde" data-act="multi-up" ${n ? '' : 'disabled'}>Îmbunătățește tot</button>
+    <div class="rand-butoane"><button class="btn" data-act="multi-gol">Golește</button><button class="btn" data-act="multi-gata">Gata</button></div>`, 'mica multi');
+}
+function imbunatatesteMulti() {
+  const lista = [...multi].map(gaseste).filter(Boolean).sort((a, b) => def(a.tip).pret[a.nivel] - def(b.tip).pret[b.nivel]);
+  let ok = 0, faraBani = 0, faraMester = 0;
+  for (const c of lista) {
+    const d = def(c.tip), n = c.nivel;
+    if (c.upg || n >= d.max || n + 1 > nivelMaxPermis(c.tip)) continue;
+    const pret = d.pret[n], t = d.timp[n];
+    if (S.res[d.cost] < pret) { faraBani++; continue; }
+    if (t > 0 && mesteriOcupati() >= S.mesteri) { faraMester++; continue; }
+    S.res[d.cost] -= pret; if (d.prod) aseaza(c);
+    if (t <= 0) c.nivel = n + 1; else c.upg = { la: n + 1, pana: acum() + t * 1000 };
+    ok++; if (t > 0 || c.nivel >= nivelMaxPermis(c.tip)) multi.delete(c.id);
+  }
+  salveaza(); actualizeazaBara();
+  toast(`Am pornit ${ok} îmbunătățiri${faraBani ? `, ${faraBani} fără resurse` : ''}${faraMester ? `, ${faraMester} așteaptă meșteri` : ''}.`, ok ? 'bun' : 'eroare');
+  deschideMulti();
+}
+function strangeTot() {
+  const sum = { lei: 0, grau: 0, sare: 0 }; let plin = false;
+  for (const c of S.cladiri) {
+    const d = def(c.tip); if (!d.prod || c.nivel < 1) continue;
+    aseaza(c); const loc = capacitate(d.res) - S.res[d.res]; const luat = Math.max(0, Math.min(Math.floor(c.acc), Math.floor(loc)));
+    if (luat > 0) { S.res[d.res] += luat; c.acc -= luat; sum[d.res] += luat; plutitoare.push({ x: c.x + d.size / 2, y: c.y, text: '+' + fmtScurt(luat), res: d.res, t0: null }); }
+    if (c.acc >= 1) plin = true;
+  }
+  salveaza(); actualizeazaBara();
+  const txt = ['lei', 'grau', 'sare'].filter(r => sum[r]).map(r => `+${fmt(sum[r])} ${NUME_RES[r]}`).join(', ');
+  toast(txt ? 'Ai strâns ' + txt + (plin ? ' (depozite pline!)' : '') : plin ? 'Depozitele sunt pline!' : 'Nimic de strâns încă.', txt ? 'bun' : 'eroare');
+}
+function ceVaStrange() {
+  for (const c of S.cladiri) { const d = def(c.tip); if (d.prod && c.nivel > 0 && acumulat(c) >= Math.max(5, d.cap[c.nivel - 1] * 0.04)) return true; }
+  return false;
 }
 
 function colecteaza(c, tacut) {
@@ -469,12 +563,13 @@ function deschideFoaie(titlu, html, cls = '') {
   $$('#meniu button').forEach(b => b.classList.toggle('activ', !!foaie && b.dataset.nav === foaie.tip));
 }
 function inchideFoaie() {
-  $('#foaie').hidden = true; foaie = null; selectat = null;
+  $('#foaie').hidden = true; foaie = null; selectat = null; multi = null;
   if (plasare) plasare = null;
   if (window.Clan) Clan.inchis();
   $$('#meniu button').forEach(b => b.classList.remove('activ'));
 }
 $('#foaie .inchide').addEventListener('click', () => inchideFoaie());
+$('#strange-tot').addEventListener('click', () => strangeTot());
 
 function stat(et, val) { return `<div class="stat"><span>${et}</span><b>${val}</b></div>`; }
 const butonGrabire = (act, id, pana, extra = '') => `<button class="btn mare galben" data-act="${act}" data-id="${id}" ${extra}>Termină acum<small>${ico('galbeni')}<span data-galbeni-pana="${pana}">${galbeniPentruTimp((pana - acum()) / 1000)}</span> galbeni</small></button>`;
@@ -523,6 +618,10 @@ function deschideCladire(c) {
   if (c.tip === 'cetateClan' && n > 0) b.push('<button class="btn" data-act="nav" data-nav="clan">Clanul</button>');
   b.push(`<button class="btn" data-act="muta" data-id="${c.id}">Mută</button>`);
   r.push(`<div class="rand-butoane">${b.join('')}</div>`);
+  const m = [`<button class="btn mic" data-act="multi-start" data-id="${c.id}">☑ Selectează mai multe</button>`];
+  if (c.tip === 'zid') { m.push(`<button class="btn mic" data-act="multi-rand" data-id="${c.id}">Tot rândul</button>`); m.push(`<button class="btn mic" data-act="multi-tip" data-id="${c.id}">Toate zidurile nv ${n}</button>`); }
+  else if (numar(c.tip) > 1) m.push(`<button class="btn mic" data-act="multi-tip" data-id="${c.id}">Toate (${numar(c.tip)})</button>`);
+  r.push(`<div class="rand-butoane multi-b">${m.join('')}</div>`);
   if (c.tip === 'cetateClan' && n > 0) {
     const tr = J.cetate || []; const cap = d.capacitate[n - 1]; const fol = tr.reduce((s, t) => s + (OSTENI[t.tip] ? OSTENI[t.tip].loc : 0), 0);
     r.push(`<h3>În cetate: ${fol}/${cap}</h3><p class="nota">${tr.length ? tr.map(t => `${OSTENI[t.tip] ? OSTENI[t.tip].nume : t.tip} (nv ${t.nivel})`).join(', ') : 'Goală. Cere oșteni din clan.'}</p>`);
@@ -614,6 +713,15 @@ function startPlasare(tip, mutaId, pozitie) {
 function arataPlasare() {
   const d = def(plasare.tip), ok = locValid(plasare.x, plasare.y, d.size, plasare.mutaId);
   foaie = { tip: 'plasare' };
+  if (plasare.linie) {
+    const n = plasare.linie.filter(p => p.ok).length;
+    return deschideFoaie('Linie de ziduri', `<p class="nota">${n} ${n === 1 ? 'zid' : 'ziduri'} · cost ${cost(d.cost, n * d.pret[0])}. Trage din nou ca să schimbi linia.</p>
+      <div class="rand-butoane"><button class="btn" data-act="plasare-nu">✕ Anulează</button><button class="btn verde" data-act="plasare-da" ${n ? '' : 'disabled'}>✓ Ridică ${n}</button></div>`, 'mica');
+  }
+  if (plasare.tip === 'zid' && !plasare.mutaId) {
+    return deschideFoaie('Așază: ' + d.nume, `<p class="nota">Atinge ca să pui un zid sau <b>trage cu degetul</b> ca să ridici o linie întreagă. Cost: ${cost(d.cost, d.pret[0])}/zid.</p>
+      <div class="rand-butoane"><button class="btn" data-act="plasare-nu">✕ Anulează</button><button class="btn verde" data-act="plasare-da" ${ok ? '' : 'disabled'}>✓ Construiește</button></div>`, 'mica');
+  }
   deschideFoaie(plasare.mutaId ? 'Mută: ' + d.nume : 'Așază: ' + d.nume,
     `<p class="nota">Atinge sau trage pe hartă ca să alegi locul.${!plasare.mutaId ? ' Cost: ' + cost(d.cost, d.pret[0]) : ''}</p>
      <div class="rand-butoane"><button class="btn" data-act="plasare-nu">✕ Anulează</button><button class="btn verde" data-act="plasare-da" ${ok ? '' : 'disabled'}>✓ ${plasare.mutaId ? 'Mută aici' : 'Construiește'}</button></div>`, 'mica');
@@ -624,7 +732,33 @@ function seteazaGhost(x, y) {
   plasare.y = Math.max(0, Math.min(GRID - s, Math.floor(y - s / 2 + 0.5)));
   const b = $('[data-act="plasare-da"]'); if (b) b.disabled = !locValid(plasare.x, plasare.y, s, plasare.mutaId);
 }
+function seteazaLinie(a, b) {
+  const x0 = Math.floor(a.x), y0 = Math.floor(a.y), x1 = Math.floor(b.x), y1 = Math.floor(b.y);
+  const oriz = Math.abs(x1 - x0) >= Math.abs(y1 - y0); const lin = [];
+  const n = oriz ? Math.abs(x1 - x0) : Math.abs(y1 - y0); const pas = (oriz ? Math.sign(x1 - x0) : Math.sign(y1 - y0)) || 1;
+  const d = def('zid'); let ramase = limita('zid') - numar('zid'), bani = S.res[d.cost];
+  for (let i = 0; i <= n; i++) {
+    const x = oriz ? x0 + i * pas : x0, y = oriz ? y0 : y0 + i * pas;
+    let ok = locValid(x, y, 1);
+    if (ok && (ramase <= 0 || bani < d.pret[0])) ok = false;
+    if (ok) { ramase--; bani -= d.pret[0]; }
+    lin.push({ x, y, ok });
+  }
+  plasare.linie = lin; plasare.x = x1; plasare.y = y1;
+  arataPlasare();
+}
+function construiesteLinie() {
+  const d = def('zid'); let n = 0;
+  for (const p of plasare.linie) {
+    if (!p.ok || !locValid(p.x, p.y, 1) || numar('zid') >= limita('zid') || S.res[d.cost] < d.pret[0]) continue;
+    S.res[d.cost] -= d.pret[0]; S.cladiri.push({ id: S.nextId++, tip: 'zid', nivel: 1, x: p.x, y: p.y, upg: null, acc: 0, last: acum() }); n++;
+  }
+  plasare = null; salveaza(); actualizeazaBara();
+  toast(n ? `Ai ridicat ${n} ${n === 1 ? 'zid' : 'ziduri'}.` : 'Niciun zid nu a încăput.', n ? 'bun' : 'eroare');
+  if (n && numar('zid') < limita('zid') && S.res[d.cost] >= d.pret[0]) startPlasare('zid'); else inchideFoaie();
+}
 function confirmaPlasare() {
+  if (plasare.linie) return construiesteLinie();
   const p = plasare, d = def(p.tip);
   if (!locValid(p.x, p.y, d.size, p.mutaId)) return toast('Locul e ocupat.', 'eroare');
   if (p.mutaId) { const c = gaseste(p.mutaId); c.x = p.x; c.y = p.y; plasare = null; salveaza(); inchideFoaie(); toast(d.nume + ' a fost mutat.'); return; }
@@ -768,7 +902,7 @@ function deschideErou(e) {
   if (st.odihna > acum() && !st.upg) h += `<p class="centru">Se odihnește încă <b data-pana="${st.odihna}">${fmtTimp((st.odihna - acum()) / 1000)}</b></p>${butonGrabire('erou-odihna', 0, st.odihna, `data-e="${e}"`)}`;
   if (st.upg) h += `<p class="centru">Ajunge la nivelul ${st.upg.la} în <b data-pana="${st.upg.pana}">${fmtTimp((st.upg.pana - acum()) / 1000)}</b></p>${butonGrabire('erou-grabeste', 0, st.upg.pana, `data-e="${e}"`)}`;
   else if (n < mx) h += `<button class="btn mare ${S.res.sare >= erouPret(e, n) ? 'verde' : 'gri'}" data-act="erou-up" data-e="${e}">Îmbunătățește la nivelul ${n + 1}<small>${cost('sare', erouPret(e, n))} · ${fmtTimp(erouTimp(n))}</small></button><p class="nota">În timpul îmbunătățirii eroul nu luptă și nu apără satul.</p>`;
-  else h += `<p class="nota centru">${n >= d.maxTH[9] ? 'Nivel maxim.' : 'Ridică Primăria ca să crești eroul mai departe.'}</p>`;
+  else h += `<p class="nota centru">${n >= d.maxTH[d.maxTH.length - 1] ? 'Nivel maxim.' : 'Ridică Primăria ca să crești eroul mai departe.'}</p>`;
   deschideFoaie(d.nume, h);
 }
 function cresteErou(e) {
@@ -781,15 +915,40 @@ function cresteErou(e) {
 }
 
 // ------------------------------------------------------------ hartă & atac
-async function deschideHarta() {
-  foaie = { tip: 'harta' };
+function deschideHartaEuropa() {
+  foaie = { tip: 'harta', tab: 'eu' };
+  const rand = TARI.map((t, ti) => `<h3 class="tara">${t.nume}</h3>` + t.cetati.map(([id]) => {
+    const c = CETATI_EUROPA.find(x => x.id === id); const st = S.campanie[id] || 0, desc = Harta.cetateEuropaDeblocata(c.idx, S.campanie);
+    return `<div class="rand-cet ${desc ? '' : 'blocat'}"><div><b>${c.nume}</b><small>Putere ${c.th} · Pradă ${cost('lei', prazaCetate(c))} ${cost('grau', prazaCetate(c))} ${cost('sare', prazaSare(c))}</small></div>
+      <span class="stele">${[0, 1, 2].map(k => `<span class="${k < st ? 'plina' : ''}">★</span>`).join('')}</span>
+      ${desc ? `<button class="btn mic rosu" data-act="cetate-eu" data-id="${c.id}">Atacă</button>` : '<em>Blocată</em>'}</div>`;
+  }).join('')).join('');
+  const total = CETATI_EUROPA.filter(c => (S.campanie[c.id] || 0) > 0).length;
+  deschideFoaie('Harta Europei', `<div class="tab-uri mic"><button data-act="harta-tab" data-tab="ro">România</button><button class="activ" data-act="harta-tab" data-tab="eu">Europa</button></div>
+    <div class="harta-wrap">${Harta.svgEuropa(S.campanie)}</div>
+    <p class="nota">Cucerite: <b>${total}/${CETATI_EUROPA.length}</b>. ${(S.campanie.targoviste || 0) ? 'Cucerește-le pe rând, țară după țară.' : 'Se deschide după ce cucerești Curtea Domnească Târgoviște.'}</p>${rand}`, 'inalta');
+}
+const prazaSare = c => c.th >= 7 ? c.th * c.th * 25 : 0;
+async function atacaCetateEu(id) {
+  const c = CETATI_EUROPA.find(x => x.id === id);
+  if (!c || !Harta.cetateEuropaDeblocata(c.idx, S.campanie)) return toast('Cucerește întâi cetatea de dinainte.', 'eroare');
+  if (!areArmata()) return;
+  inchideFoaie(); await salveazaAcum();
+  const tara = TARI.find(t => t.id === c.tara);
+  Lupta.start({ tip: 'cetate', id: c.id, nume: c.nume, sub: `${tara.nume} · putere ${c.th}`, cladiri: genereazaSat(c.th, hashText(c.id), true),
+    loot: { lei: prazaCetate(c), grau: prazaCetate(c), sare: prazaSare(c) }, cautare: false });
+}
+
+async function deschideHarta(tab) {
+  if (tab === 'eu') return deschideHartaEuropa();
+  foaie = { tip: 'harta', tab: 'ro' };
   const cet = CETATI.map((c, i) => {
     const st = S.campanie[c.id] || 0, desc = Harta.cetateDeblocata(i, S.campanie);
     return `<div class="rand-cet ${desc ? '' : 'blocat'}"><div><b>${c.nume}</b><small>Putere ${c.th} · Pradă ${cost('lei', prazaCetate(c))} ${cost('grau', prazaCetate(c))}</small></div>
       <span class="stele">${[0, 1, 2].map(k => `<span class="${k < st ? 'plina' : ''}">★</span>`).join('')}</span>
       ${desc ? `<button class="btn mic rosu" data-act="cetate" data-id="${c.id}">Atacă</button>` : '<em>Blocată</em>'}</div>`;
   }).join('');
-  deschideFoaie('Harta României', `<div class="harta-wrap">${Harta.svg(S.campanie, {})}</div>
+  deschideFoaie('Harta României', `<div class="tab-uri mic"><button class="activ" data-act="harta-tab" data-tab="ro">România</button><button data-act="harta-tab" data-tab="eu">Europa 🇪🇺</button></div><div class="harta-wrap">${Harta.svg(S.campanie, {})}</div>
     <button class="btn mare rosu" data-act="cauta">⚔ Caută un adversar</button>
     <div id="lista-regiune"></div>
     <h3>Cetățile țării</h3><p class="nota">Cucerește-le pe rând. Fiecare cetate cucerită o deblochează pe următoarea.</p><div class="lista">${cet}</div>`, 'inalta');
@@ -850,7 +1009,7 @@ async function atacaCetate(id) {
   if (!areArmata()) return;
   inchideFoaie(); await salveazaAcum();
   Lupta.start({ tip: 'cetate', id: c.id, nume: c.nume, sub: `Cetate · putere ${c.th}`, cladiri: genereazaSat(c.th, hashText(c.id), true),
-    loot: { lei: prazaCetate(c), grau: prazaCetate(c), sare: c.th >= 7 ? c.th * 200 : 0 }, cautare: false });
+    loot: { lei: prazaCetate(c), grau: prazaCetate(c), sare: prazaSare(c) }, cautare: false });
 }
 
 // apelate din lupta.js și clan.js
@@ -1006,6 +1165,14 @@ $('#foaie').addEventListener('click', async e => {
     case 'nav': navigheaza(b.dataset.nav); break;
     case 'cauta': cautaAdversar(); break;
     case 'cetate': atacaCetate(id); break;
+    case 'cetate-eu': atacaCetateEu(id); break;
+    case 'harta-tab': deschideHarta(b.dataset.tab); break;
+    case 'multi-start': if (c) startMulti([c.id]); break;
+    case 'multi-rand': if (c) startMulti(randZid(c)); break;
+    case 'multi-tip': if (c) startMulti(S.cladiri.filter(x => x.tip === c.tip && (c.tip !== 'zid' || x.nivel === c.nivel)).map(x => x.id)); break;
+    case 'multi-up': imbunatatesteMulti(); break;
+    case 'multi-gol': multi = new Set(); deschideMulti(); break;
+    case 'multi-gata': multi = null; inchideFoaie(); break;
     case 'regiune': arataRegiune(id); break;
     case 'ataca-jucator': cautaAdversar(id); break;
     case 'cere-pachet': { const p = PACHETE.find(x => x.id === id); if (p) cereGalbeni(p.suma, '', p.nume); break; }
